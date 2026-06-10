@@ -250,7 +250,7 @@ async function getRoute(
                 "X-Goog-Api-Key":API_KEY,
 
                 "X-Goog-FieldMask":
-                "routes.distanceMeters,routes.duration,routes.polyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
+                "routes.distanceMeters,routes.duration,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
             },
 
             body:JSON.stringify({
