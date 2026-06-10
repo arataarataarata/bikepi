@@ -103,12 +103,239 @@ button{
 <script>
 
 const API_KEY = "AIzaSyDm_lAR3kd0a8VAaGdqigrMeCgYTyLVl5I";
-
+let routeSteps = [];
+let currentStepIndex = 0;
+let destination = null;
+let watchId = null;
+let currentRoute = null;
 let destination = null;
 let currentRoute = null;
 let watchId = null;
 
 const REROUTE_THRESHOLD = 50;
+function decodePolyline(encoded) {
+
+    let points = [];
+
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+
+    while (index < encoded.length) {
+
+        let b;
+        let shift = 0;
+        let result = 0;
+
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+
+        let dlat =
+            (result & 1)
+                ? ~(result >> 1)
+                : (result >> 1);
+
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+
+        let dlng =
+            (result & 1)
+                ? ~(result >> 1)
+                : (result >> 1);
+
+        lng += dlng;
+
+        points.push([
+            lat / 1e5,
+            lng / 1e5
+        ]);
+    }
+
+    return points;
+}
+
+function calculateDistance(
+    lat1,
+    lng1,
+    lat2,
+    lng2
+){
+
+    const R = 6371000;
+
+    const dLat =
+        (lat2-lat1)
+        * Math.PI / 180;
+
+    const dLng =
+        (lng2-lng1)
+        * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat/2) *
+        Math.sin(dLat/2)
+
+        +
+
+        Math.cos(lat1*Math.PI/180)
+
+        *
+
+        Math.cos(lat2*Math.PI/180)
+
+        *
+
+        Math.sin(dLng/2)
+
+        *
+
+        Math.sin(dLng/2);
+
+    return R *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1-a)
+        );
+}
+function getRemainingDistanceToStep(
+    lat,
+    lng,
+    step
+){
+
+    const encoded =
+        step.polyline
+        ?.encodedPolyline;
+
+    if(!encoded){
+
+        return step.distanceMeters;
+    }
+
+    const points =
+        decodePolyline(
+            encoded
+        );
+
+    let nearestIndex = 0;
+
+    let minDistance =
+        Number.MAX_VALUE;
+
+    points.forEach(
+        (point,index)=>{
+
+            const d =
+                calculateDistance(
+                    lat,
+                    lng,
+
+                    point[0],
+                    point[1]
+                );
+
+            if(d < minDistance){
+
+                minDistance = d;
+
+                nearestIndex =
+                    index;
+            }
+
+        }
+    );
+
+    let remain = 0;
+
+    for(
+        let i=nearestIndex;
+        i<points.length-1;
+        i++
+    ){
+
+        remain +=
+            calculateDistance(
+
+                points[i][0],
+                points[i][1],
+
+                points[i+1][0],
+                points[i+1][1]
+            );
+
+    }
+
+    return Math.round(
+        remain
+    );
+}
+function updateCurrentStep(
+    lat,
+    lng
+){
+
+    if(
+        routeSteps.length === 0
+    ){
+        return;
+    }
+
+    const step =
+        routeSteps[
+            currentStepIndex
+        ];
+
+    const remain =
+        getRemainingDistanceToStep(
+            lat,
+            lng,
+            step
+        );
+
+    const arrow =
+        maneuverToArrow(
+            step
+            .navigationInstruction
+            ?.maneuver
+        );
+
+    document
+        .getElementById(
+            "oled"
+        )
+        .innerHTML =
+        `${arrow}${remain}m`;
+
+    if(remain < 15){
+
+        currentStepIndex++;
+
+        if(
+            currentStepIndex >=
+            routeSteps.length
+        ){
+
+            document
+            .getElementById(
+                "oled"
+            )
+            .innerHTML =
+            "GOAL";
+        }
+    }
+}
 
 function maneuverToArrow(m){
 
@@ -405,7 +632,11 @@ async function reroute(
 
         const steps =
             currentRoute.legs[0].steps;
+            routeSteps =
+            steps;
 
+            currentStepIndex = 0;
+        
         document.getElementById(
             "routeList"
         ).innerHTML =
@@ -464,7 +695,10 @@ function startLocationTracking(){
             updateSpeed(
                 pos.coords.speed
             );
-
+            updateCurrentStep(
+                lat,
+                lng
+            );
             checkRouteDeviation(
                 lat,
                 lng
