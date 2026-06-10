@@ -840,8 +840,20 @@ currentRoute =
             currentRoute
             .legs[0]
             .steps;
-        routeSteps = steps;
+           routeSteps = steps;
         currentStepIndex = 0;
+
+console.log(
+    "DECODE TEST",
+    decodePolyline(
+        routeSteps[0]
+        .polyline
+        .encodedPolyline
+    )
+);
+
+        
+  
 
         document
             .getElementById(
