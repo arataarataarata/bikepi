@@ -568,13 +568,14 @@ async function searchPlace(){
 
             );
 
-        console.log(
-            JSON.stringify(
-                route.routes[0].legs[0].steps,
-                null,
-                2
-                )
-            );
+console.log(
+  JSON.stringify(
+    route.routes[0],
+    null,
+    2
+  )
+);
+            
 
 currentRoute =
     route.routes[0];
