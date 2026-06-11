@@ -405,11 +405,22 @@ document
 .innerHTML =
 
 `
-LAT:${lat}<br>
-LNG:${lng}<br>
-STEP:${currentStepIndex}<br>
-REMAIN:${remain}m
-`;      
+LAT : ${lat}<br>
+LNG : ${lng}<br>
+<br>
+
+GPS SPEED :
+${pos.coords.speed}<br>
+
+GPS ACCURACY :
+${pos.coords.accuracy}m<br>
+
+STEP :
+${currentStepIndex}<br>
+
+OLED SPEED :
+${speed}<br>
+`;
 
     const arrow =
         maneuverToArrow(
