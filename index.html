@@ -304,7 +304,13 @@ function updateCurrentStep(
 
     const remain =
 
-        document
+    getRemainingDistanceToStep(
+        lat,
+        lng,
+        step
+    );
+
+document
     .getElementById(
         "debugInfo"
     )
@@ -314,11 +320,7 @@ function updateCurrentStep(
     REMAIN :
     ${remain}
     `;
-        getRemainingDistanceToStep(
-            lat,
-            lng,
-            step
-        );
+      
 
     const arrow =
         maneuverToArrow(
