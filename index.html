@@ -513,7 +513,7 @@ function updateSpeed(speedKmh){
     }
 
     oled.innerHTML =
-        `${oledSpeed}km/h`;
+        `${speedKmh}km/h`;
 }
 
 
@@ -827,7 +827,7 @@ pos => {
         SPEED : ${speed}<br>
         STEP : ${currentStepIndex}
         `;
-
+    updateSpeed(speed);
     updateCurrentStep(
         lat,
         lng
