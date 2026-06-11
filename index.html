@@ -72,11 +72,18 @@ button{
 待機中
 </div>
 
+
 <div class="section">
 <h3>GPS情報</h3>
 <div id="gpsInfo">---</div>
+
+<hr>
+
+<div id="debugInfo">
+デバッグ待機中
 </div>
 
+</div>
 <div class="section">
 <h3>SSD1306表示イメージ</h3>
 
@@ -296,6 +303,17 @@ function updateCurrentStep(
         ];
 
     const remain =
+
+        document
+    .getElementById(
+        "debugInfo"
+    )
+    .innerHTML +=
+
+    `<br>
+    REMAIN :
+    ${remain}
+    `;
         getRemainingDistanceToStep(
             lat,
             lng,
@@ -678,39 +696,37 @@ function startLocationTracking(){
         .geolocation
         .watchPosition(
 
-        pos=>{
 
-            const lat =
-                pos.coords.latitude;
+pos => {
 
-            const lng =
-                pos.coords.longitude;
+    const lat =
+        pos.coords.latitude;
 
-            document
-                .getElementById(
-                    "gpsInfo"
-                )
-                .innerHTML =
-                `
-                Lat:${lat.toFixed(6)}
-                <br>
-                Lng:${lng.toFixed(6)}
-                `;
+    const lng =
+        pos.coords.longitude;
 
-            updateSpeed(
-                pos.coords.speed
-            );
-            updateCurrentStep(
-                lat,
-                lng
-            );
-            checkRouteDeviation(
-                lat,
-                lng
-            );
+    const speed =
+        pos.coords.speed;
 
-        },
+    document
+        .getElementById(
+            "debugInfo"
+        )
+        .innerHTML =
 
+        `
+        LAT : ${lat}<br>
+        LNG : ${lng}<br>
+        SPEED : ${speed}<br>
+        STEP : ${currentStepIndex}
+        `;
+
+    updateCurrentStep(
+        lat,
+        lng
+    );
+
+}
         err=>{
 
             console.error(err);
