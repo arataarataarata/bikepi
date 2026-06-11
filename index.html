@@ -409,8 +409,7 @@ if(
     ){
         offRouteCounter++;
     }
-    else{
-        offRouteCounter = 0;
+    
     }
     if(
         offRouteCounter >= 3
@@ -451,13 +450,26 @@ ${currentStepIndex}<br>
             .navigationInstruction
             ?.maneuver
         );
+const nextStep =
+    routeSteps[
+        currentStepIndex + 1
+    ];
 
+const nextArrow =
+    nextStep
+    ? maneuverToArrow(
+        nextStep
+        .navigationInstruction
+        ?.maneuver
+      )
+    : "";
+    
     document
         .getElementById(
             "oledArrow"
         )
         .innerHTML =
-        `${arrow}${remain}m`;
+        `${remain}m ${arrow} then ${nextArrow} `;
 
     if(remain < 15){
 
