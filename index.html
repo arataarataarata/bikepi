@@ -111,7 +111,19 @@ button{
 未取得
 </div>
 </div>
+<div class="section">
+<h3>ルートマップ</h3>
 
+<div
+    id="map"
+    style="
+        width:100%;
+        height:500px;
+        border:1px solid #ccc;
+    "
+></div>
+
+</div>
 <script>
 
 const API_KEY = "AIzaSyDm_lAR3kd0a8VAaGdqigrMeCgYTyLVl5I";
@@ -128,8 +140,79 @@ let previousLng = null;
 let previousTime = null;
 let lastRemain = null;
 let offRouteCounter = 0;
+let map;
+let routeLine;
 
 
+
+function initMap(){
+
+    map =
+        new google.maps.Map(
+
+            document.getElementById(
+                "map"
+            ),
+
+            {
+                zoom:15,
+
+                center:{
+                    lat:35.68,
+                    lng:139.76
+                }
+            }
+        );
+}
+function drawRoute(
+    encodedPolyline
+){
+
+    const path =
+        google.maps.geometry
+        .encoding
+        .decodePath(
+            encodedPolyline
+        );
+
+    if(routeLine){
+
+        routeLine.setMap(
+            null
+        );
+    }
+
+    routeLine =
+        new google.maps.Polyline({
+
+            path:path,
+
+            strokeColor:"#0000FF",
+
+            strokeOpacity:1,
+
+            strokeWeight:5
+
+        });
+
+    routeLine.setMap(
+        map
+    );
+
+    const bounds =
+        new google.maps.LatLngBounds();
+
+    path.forEach(
+
+        p => bounds.extend(p)
+
+    );
+
+    map.fitBounds(
+        bounds
+    );
+}
+    
 function calculateSpeed(
     lat,
     lng
@@ -698,10 +781,9 @@ async function getRoute(
                 "Content-Type":"application/json",
 
                 "X-Goog-Api-Key":API_KEY,
-
-                "X-Goog-FieldMask":
-                "routes.distanceMeters,routes.duration,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
-            },
+"X-Goog-FieldMask":
+"routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
+             },
         body:JSON.stringify({
             origin:{
                 location:{
@@ -1134,7 +1216,11 @@ console.log(
     )
 );
 
-        
+      drawRoute(
+    route.routes[0]
+    .polyline
+    .encodedPolyline
+);  
   
 
         document
@@ -1180,6 +1266,7 @@ console.log(
         startLocationTracking();
 
     }
+    
     catch(error){
 
         console.error(error);
@@ -1198,6 +1285,8 @@ console.log(
 }
 
 </script>
-
+<script
+src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry">
+</script>
 </body>
 </html>
