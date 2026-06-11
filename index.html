@@ -118,6 +118,43 @@ let currentRoute = null;
 
 
 const REROUTE_THRESHOLD = 50;
+
+
+function getDistanceToStepEnd(
+    lat,
+    lng,
+    step
+){
+
+    const points =
+        decodePolyline(
+            step.polyline
+            .encodedPolyline
+        );
+
+    if(
+        points.length === 0
+    ){
+        return 9999;
+    }
+
+    const target =
+        points[
+            points.length - 1
+        ];
+
+    return Math.round(
+
+        calculateDistance(
+            lat,
+            lng,
+            target[0],
+            target[1]
+        )
+
+    );
+}  
+    
 function decodePolyline(encoded) {
 
     let points = [];
@@ -302,25 +339,27 @@ function updateCurrentStep(
             currentStepIndex
         ];
 
-    const remain =
 
-    getRemainingDistanceToStep(
+const remain =
+    getDistanceToStepEnd(
         lat,
         lng,
         step
     );
+    
 
 document
-    .getElementById(
-        "debugInfo"
-    )
-    .innerHTML +=
+.getElementById(
+    "debugInfo"
+)
+.innerHTML =
 
-    `<br>
-    REMAIN :
-    ${remain}
-    `;
-      
+`
+LAT:${lat}<br>
+LNG:${lng}<br>
+STEP:${currentStepIndex}<br>
+REMAIN:${remain}m
+`;      
 
     const arrow =
         maneuverToArrow(
