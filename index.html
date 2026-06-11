@@ -393,56 +393,76 @@ function updateCurrentStep(
             currentStepIndex
         ];
 
-
-const remain =
-    getDistanceToStepEnd(
-        lat,
-        lng,
-        step
-    );
-if(
-    lastRemain !== null
-){
-    if(
-        remain >
-        lastRemain + 10
-    ){
-        offRouteCounter++;
-    }
-    
-    }
-    if(
-        offRouteCounter >= 3
-    ){
-        recalculateRoute(
+    const remain =
+        getDistanceToStepEnd(
             lat,
-            lng
+            lng,
+            step
         );
-        offRouteCounter = 0;
-        return;
+
+    // ------------------------
+    // ルート逸脱判定
+    // ------------------------
+
+    if(
+        lastRemain !== null
+    ){
+
+        if(
+            remain >
+            lastRemain + 10
+        ){
+
+            offRouteCounter++;
+
+        }
+        else{
+
+            offRouteCounter = 0;
+
+        }
+
+        if(
+            offRouteCounter >= 3
+        ){
+
+            recalculateRoute(
+                lat,
+                lng
+            );
+
+            offRouteCounter = 0;
+
+            return;
+        }
     }
-}
 
-lastRemain = remain;    
+    lastRemain = remain;
 
-document
-.getElementById(
-    "debugInfo"
-)
-.innerHTML =
+    // ------------------------
+    // デバッグ表示
+    // ------------------------
 
-`
-LAT : ${lat}<br>
-LNG : ${lng}<br>
-<br>
-STEP : ${currentStepIndex}<br>
-REMAIN : ${remain}<br>
-LAST : ${lastRemain}<br>
-OFFROUTE : ${offRouteCounter}<br>
-STEP :
-${currentStepIndex}<br>
+    document
+    .getElementById(
+        "debugInfo"
+    )
+    .innerHTML =
 
-`;
+    `
+    LAT : ${lat}<br>
+    LNG : ${lng}<br>
+
+    STEP : ${currentStepIndex}<br>
+
+    REMAIN : ${remain}<br>
+
+    OFFROUTE : ${offRouteCounter}<br>
+    `;
+
+    // ------------------------
+    // 現在の矢印
+    // ------------------------
 
     const arrow =
         maneuverToArrow(
@@ -450,28 +470,48 @@ ${currentStepIndex}<br>
             .navigationInstruction
             ?.maneuver
         );
-const nextStep =
-    routeSteps[
-        currentStepIndex + 1
-    ];
 
-const nextArrow =
-    nextStep
-    ? maneuverToArrow(
+    // ------------------------
+    // 次の矢印
+    // ------------------------
+
+    const nextStep =
+        routeSteps[
+            currentStepIndex + 1
+        ];
+
+    const nextArrow =
         nextStep
-        .navigationInstruction
-        ?.maneuver
-      )
-    : "";
-    
-    document
-        .getElementById(
-            "oledArrow"
-        )
-        .innerHTML =
-        `${remain}m ${arrow} then ${nextArrow} `;
+        ? maneuverToArrow(
+            nextStep
+            .navigationInstruction
+            ?.maneuver
+          )
+        : "GOAL";
 
-    if(remain < 15){
+    // ------------------------
+    // OLED表示
+    // ------------------------
+
+    document
+    .getElementById(
+        "oledArrow"
+    )
+    .innerHTML =
+
+    `
+    ${remain}m ${arrow}
+    <br>
+    NEXT ${nextArrow}
+    `;
+
+    // ------------------------
+    // STEP切替
+    // ------------------------
+
+    if(
+        remain < 15
+    ){
 
         currentStepIndex++;
 
@@ -486,10 +526,11 @@ const nextArrow =
             )
             .innerHTML =
             "GOAL";
+
+            return;
         }
     }
 }
-
 function maneuverToArrow(m){
 
     switch(m){
