@@ -497,19 +497,32 @@ function updateOLED(step){
     ).innerHTML =
         `${arrow}${distance}m`;
 }
+    
+function updateSpeed(speedKmh){
 
-function updateSpeed(
-    speedKmh
-){
+    console.log(
+        "updateSpeed:",
+        speedKmh
+    );
 
-    document
-    .getElementById(
-        "oledSpeed"
-    )
-    .innerHTML =
+    const oled =
+        document.getElementById(
+            "oledSpeed"
+        );
 
-    `${speedKmh}km/h`;
+    if(!oled){
+
+        alert(
+            "oledSpeed not found"
+        );
+
+        return;
+    }
+
+    oled.innerHTML =
+        `${speedKmh}km/h`;
 }
+
 
 function buildRouteList(steps){
 
