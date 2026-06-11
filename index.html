@@ -58,15 +58,20 @@ button{
 <body>
 
 <h1>Bike Navi Ver2.6</h1>
+<input type="text" id="dest" placeholder="目的地を入力">
+<button onclick="searchPlace()">検索</button>
 
+<br><br>
+
+<label>
 <input
-    type="text"
-    id="dest"
-    placeholder="目的地を入力">
+    type="checkbox"
+    id="useToll"
+    checked
+>
+有料道路を使用する
+</label>
 
-<button onclick="searchPlace()">
-検索
-</button>
 
 <div id="result" class="section">
 待機中
@@ -697,30 +702,36 @@ async function getRoute(
                 "X-Goog-FieldMask":
                 "routes.distanceMeters,routes.duration,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
             },
-
-            body:JSON.stringify({
-
-                origin:{
-                    location:{
-                        latLng:{
-                            latitude:startLat,
-                            longitude:startLng
-                        }
+        body:JSON.stringify({
+            origin:{
+                location:{
+                    latLng:{
+                        latitude:startLat,
+                        longitude:startLng
                     }
-                },
-
-                destination:{
-                    location:{
-                        latLng:{
-                            latitude:endLat,
-                            longitude:endLng
-                        }
+                }
+            },
+            destination:{
+                location:{
+                    latLng:{
+                        latitude:endLat,
+                        longitude:endLng
                     }
-                },
+                }
+            },
 
-                travelMode:"DRIVE"
+            travelMode:"DRIVE",
 
-            })
+            routeModifiers:{
+                avoidTolls:
+                    !document
+                        .getElementById(
+                            "useToll"
+                        )
+                        .checked
+            }
+})
+    
 
         });
 
