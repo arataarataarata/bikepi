@@ -115,10 +115,60 @@ let currentStepIndex = 0;
 let destination = null;
 let watchId = null;
 let currentRoute = null;
-
+let previousLat = null;
+let previousLng = null;
+let previousTime = null;
 
 const REROUTE_THRESHOLD = 50;
 
+function calculateSpeed(
+    lat,
+    lng
+){
+
+    const now =
+        Date.now();
+
+    if(
+        previousLat === null
+    ){
+
+        previousLat = lat;
+        previousLng = lng;
+        previousTime = now;
+
+        return 0;
+    }
+
+    const distance =
+
+        calculateDistance(
+            previousLat,
+            previousLng,
+            lat,
+            lng
+        );
+
+    const seconds =
+
+        (now - previousTime)
+        / 1000;
+
+    previousLat = lat;
+    previousLng = lng;
+    previousTime = now;
+
+    if(seconds <= 0){
+
+        return 0;
+    }
+
+    return Math.round(
+        distance /
+        seconds *
+        3.6
+    );
+}
 
 function getDistanceToStepEnd(
     lat,
@@ -437,22 +487,17 @@ function updateOLED(step){
         `${arrow}${distance}m`;
 }
 
-function updateSpeed(speedMps){
+function updateSpeed(
+    speedKmh
+){
 
-    let speed = 0;
-
-    if(speedMps !== null){
-
-        speed =
-            Math.round(
-                speedMps * 3.6
-            );
-    }
-
-    document.getElementById(
+    document
+    .getElementById(
         "oledSpeed"
-    ).innerHTML =
-        `${speed}km/h`;
+    )
+    .innerHTML =
+
+    `${speedKmh}km/h`;
 }
 
 function buildRouteList(steps){
@@ -746,9 +791,13 @@ pos => {
     const lng =
         pos.coords.longitude;
 
-    const speed =
-        pos.coords.speed;
 
+    const speed =
+
+    calculateSpeed(
+        lat,
+        lng
+    );
     document
         .getElementById(
             "debugInfo"
