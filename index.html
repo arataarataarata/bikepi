@@ -110,6 +110,9 @@ button{
 <script>
 
 const API_KEY = "AIzaSyDm_lAR3kd0a8VAaGdqigrMeCgYTyLVl5I";
+
+const REROUTE_THRESHOLD = 50;
+    
 let routeSteps = [];
 let currentStepIndex = 0;
 let destination = null;
@@ -118,8 +121,10 @@ let currentRoute = null;
 let previousLat = null;
 let previousLng = null;
 let previousTime = null;
+let destination = null;
+let lastRemain = null;
+let offRouteCounter = 0;
 
-const REROUTE_THRESHOLD = 50;
 
 function calculateSpeed(
     lat,
@@ -396,7 +401,31 @@ const remain =
         lng,
         step
     );
-    
+if(
+    lastRemain !== null
+){
+    if(
+        remain >
+        lastRemain + 30
+    ){
+        offRouteCounter++;
+    }
+    else{
+        offRouteCounter = 0;
+    }
+    if(
+        offRouteCounter >= 3
+    ){
+        recalculateRoute(
+            lat,
+            lng
+        );
+        offRouteCounter = 0;
+        return;
+    }
+}
+
+lastRemain = remain;    
 
 document
 .getElementById(
@@ -851,7 +880,56 @@ pos => {
         });
 
 }
+async function recalculateRoute(
+    currentLat,
+    currentLng
+){
 
+    if(!destination){
+        return;
+    }
+
+    try{
+
+        const route =
+            await getRoute(
+
+                currentLat,
+                currentLng,
+
+                destination.lat,
+                destination.lng
+
+            );
+
+        routeSteps =
+            route.routes[0]
+            .legs[0]
+            .steps;
+
+        currentStepIndex = 0;
+
+        updateOLED(
+            routeSteps[0]
+        );
+
+        document
+        .getElementById(
+            "result"
+        )
+        .innerHTML +=
+
+        "<br><b>ルート再検索実行</b>";
+
+    }
+    catch(error){
+
+        console.error(
+            error
+        );
+
+    }
+}
 async function searchPlace(){
 
     const keyword =
