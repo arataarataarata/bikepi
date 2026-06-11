@@ -488,7 +488,25 @@ function updateCurrentStep(
             ?.maneuver
           )
         : "GOAL";
+let remainText = "";
 
+if(
+    remain >= 1000
+){
+
+    remainText =
+        (
+            remain / 1000
+        ).toFixed(1)
+        + "km";
+
+}
+else{
+
+    remainText =
+        remain + "m";
+
+}
     // ------------------------
     // OLED表示
     // ------------------------
@@ -500,7 +518,7 @@ function updateCurrentStep(
     .innerHTML =
 
     `
-     ${remain}m ${nextArrow}
+     ${remainText}m ${nextArrow}
     `;
 
     // ------------------------
