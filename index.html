@@ -154,6 +154,19 @@ let navPayload = {};
 let latestSpeed = 0;
 
 
+function formatDistance(meters){
+
+    if(meters >= 1000){
+
+        return (
+            meters / 1000
+        ).toFixed(1) + "km";
+
+    }
+
+    return meters + "m";
+}
+
 function buildNavPayload(
     remain,
     arrow,
@@ -164,7 +177,7 @@ function buildNavPayload(
     navPayload = {
         arrow: arrow,
         distance_m: remain,
-        distance_text: remainText,
+        distance_text: formatDistance(remain),
         next_arrow: nextArrow,
         speed_kmh: speed,
         step_index: currentStepIndex,
