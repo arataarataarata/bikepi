@@ -945,11 +945,15 @@ async function getRoute(
 
                 travelMode:"DRIVE",
 
+                
                 routeModifiers:{
-                    avoidTolls:avoidTolls,
-                    avoidHighways:avoidHighways
-                },
+                    avoidTolls: avoidTolls,
+                    avoidHighways: avoidHighways,
 
+                vehicleInfo:{
+                    emissionType:"GASOLINE"
+                }
+                },
                 extraComputations:[
                     "TOLLS"
                 ]
