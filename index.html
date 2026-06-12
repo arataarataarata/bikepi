@@ -960,25 +960,43 @@ async function getRoute(
 }
 function getTollText(route){
 
-    const prices =
+    const tollInfo =
         route
         ?.travelAdvisory
-        ?.tollInfo
-        ?.estimatedPrice;
+        ?.tollInfo;
+
+    if(!tollInfo){
+        return "不明";
+    }
+
+    console.log(
+        "TOLL INFO",
+        tollInfo
+    );
+
+    const prices =
+        tollInfo
+        .estimatedPrice;
 
     if(!prices || prices.length === 0){
-        return "0円 / 不明";
+        return "不明";
     }
 
     const price =
         prices[0];
 
-    const units =
-        price.units ?? "0";
+    let amount = 0;
 
-    return Number(units).toLocaleString() + "円";
+    if(price.units){
+        amount += Number(price.units);
+    }
+
+    if(price.nanos){
+        amount += price.nanos / 1000000000;
+    }
+
+    return Math.round(amount).toLocaleString() + "円";
 }
-
 function formatDuration(durationText){
 
     const seconds =
