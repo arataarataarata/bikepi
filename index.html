@@ -125,6 +125,12 @@ button{
 ></div>
 
 </div>
+
+<div class="section">
+<h3>Pi Zero W送信用JSON</h3>
+<pre id="jsonOutput">未生成</pre>
+</div>
+    
 <script>
 
 const API_KEY = "AIzaSyDm_lAR3kd0a8VAaGdqigrMeCgYTyLVl5I";
@@ -144,7 +150,30 @@ let offRouteCounter = 0;
 let map;
 let routeLine;
 let currentMarker;
+let navPayload = {};
+let latestSpeed = 0;
 
+
+function buildNavPayload(
+    remain,
+    arrow,
+    nextArrow,
+    speed
+){
+
+    navPayload = {
+        arrow: arrow,
+        distance_m: remain,
+        distance_text: formatDistance(remain),
+        next_arrow: nextArrow,
+        speed_kmh: speed,
+        step_index: currentStepIndex,
+        timestamp: Date.now()
+    };
+
+    return navPayload;
+}
+    
 function updateCurrentMarker(
     lat,
     lng
@@ -612,6 +641,27 @@ function updateCurrentStep(
             ?.maneuver
           )
         : "GOAL";
+    
+    const payload =
+    buildNavPayload(
+        remain,
+        arrow,
+        nextArrow,
+        latestSpeed
+    );
+
+document
+    .getElementById(
+        "jsonOutput"
+    )
+    .textContent =
+    JSON.stringify(
+        payload,
+        null,
+        2
+    );
+
+    
 let remainText = "";
 
 if(
@@ -1055,6 +1105,7 @@ pos => {
         SPEED : ${speed}<br>
         STEP : ${currentStepIndex}
         `;
+    latestSpeed = speed;
     updateSpeed(speed);
 
     updateCurrentMarker(
