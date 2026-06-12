@@ -962,6 +962,7 @@ async function getRoute(
 
     return await response.json();
 }
+
 function getTollText(route){
 
     const tollInfo =
@@ -970,37 +971,25 @@ function getTollText(route){
         ?.tollInfo;
 
     if(!tollInfo){
-        return "不明";
+        return "0円";
     }
-
-    console.log(
-        "TOLL INFO",
-        tollInfo
-    );
 
     const prices =
         tollInfo
-        .estimatedPrice;
+        ?.estimatedPrice;
 
     if(!prices || prices.length === 0){
-        return "不明";
+        return "有料・料金不明";
     }
 
-    const price =
-        prices[0];
+    const price = prices[0];
 
-    let amount = 0;
+    const units =
+        Number(price.units ?? 0);
 
-    if(price.units){
-        amount += Number(price.units);
-    }
-
-    if(price.nanos){
-        amount += price.nanos / 1000000000;
-    }
-
-    return Math.round(amount).toLocaleString() + "円";
+    return units.toLocaleString() + "円";
 }
+    
 function formatDuration(durationText){
 
     const seconds =
