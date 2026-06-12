@@ -64,6 +64,11 @@ button{
 
 <br><br>
 
+<button onclick="goHome()">
+自宅に戻る
+</button>    
+<br><br>
+
 <label>
 <input
     type="checkbox"
@@ -158,8 +163,22 @@ let navPayload = {};
 let latestSpeed = 0;
 let lastSendTime = 0;
 const SEND_INTERVAL_MS = 1000;
+const HOME_ADDRESS =
+    "東京都江戸川区清新町１丁目３";
 
 
+function goHome(){
+
+    document
+        .getElementById(
+            "dest"
+        )
+        .value =
+        HOME_ADDRESS;
+
+    searchPlace();
+}
+    
 async function sendToPi(
     payload
 ){
