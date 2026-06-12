@@ -112,6 +112,7 @@ button{
 未取得
 </div>
 </div>
+    
 <div class="section">
 <h3>ルートマップ</h3>
 
@@ -130,6 +131,9 @@ button{
 <h3>Pi Zero W送信用JSON</h3>
 <pre id="jsonOutput">未生成</pre>
 </div>
+
+   
+
     
 <script>
 
@@ -152,8 +156,76 @@ let routeLine;
 let currentMarker;
 let navPayload = {};
 let latestSpeed = 0;
+let lastSendTime = 0;
+const SEND_INTERVAL_MS = 1000;
 
 
+async function sendToPi(
+    payload
+){
+
+    const now =
+        Date.now();
+
+    if(
+        now - lastSendTime <
+        SEND_INTERVAL_MS
+    ){
+        return;
+    }
+
+    lastSendTime =
+        now;
+
+    const url =
+        document
+        .getElementById(
+            "piUrl"
+        )
+        .value;
+
+    try{
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "application/json"
+                    },
+
+                    body:JSON.stringify(
+                        payload
+                    )
+                }
+            );
+
+        document
+        .getElementById(
+            "sendStatus"
+        )
+        .innerHTML =
+        "送信OK";
+
+    }
+    catch(error){
+
+        document
+        .getElementById(
+            "sendStatus"
+        )
+        .innerHTML =
+        "送信エラー";
+
+        console.error(
+            error
+        );
+    }
+}
+    
 function formatDistance(meters){
 
     if(meters >= 1000){
