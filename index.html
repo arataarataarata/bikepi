@@ -143,9 +143,44 @@ let lastRemain = null;
 let offRouteCounter = 0;
 let map;
 let routeLine;
+let currentMarker;
 
+function updateCurrentMarker(
+    lat,
+    lng
+){
 
+    if(!map){
+        return;
+    }
 
+    const position = {
+        lat: lat,
+        lng: lng
+    };
+
+    if(!currentMarker){
+
+        currentMarker =
+            new google.maps.Marker({
+
+                position: position,
+
+                map: map,
+
+                title: "現在地"
+
+            });
+
+    }
+    else{
+
+        currentMarker.setPosition(
+            position
+        );
+
+    }
+}
 function initMap(){
 
     map =
@@ -1021,10 +1056,15 @@ pos => {
         STEP : ${currentStepIndex}
         `;
     updateSpeed(speed);
+
+    updateCurrentMarker(
+        lat,
+        lng
+        );
     updateCurrentStep(
         lat,
         lng
-    );
+        );
 
 },
         err=>{
