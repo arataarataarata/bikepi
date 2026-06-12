@@ -112,6 +112,13 @@ button{
 </div>
 
 <div class="section">
+<h3>高速利用 比較</h3>
+<div id="routeCompare">
+未取得
+</div>
+</div>
+    
+<div class="section">
 <h3>ルート全体</h3>
 <div id="routeList">
 未取得
@@ -958,60 +965,186 @@ async function getRoute(
     startLat,
     startLng,
     endLat,
-    endLng
+    endLng,
+    avoidTolls = false,
+    avoidHighways = false
 ){
 
     const response =
         await fetch(
         "https://routes.googleapis.com/directions/v2:computeRoutes",
         {
-
             method:"POST",
 
             headers:{
-
                 "Content-Type":"application/json",
-
                 "X-Goog-Api-Key":API_KEY,
-"X-Goog-FieldMask":
-"routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
-             },
-        body:JSON.stringify({
-            origin:{
-                location:{
-                    latLng:{
-                        latitude:startLat,
-                        longitude:startLng
-                    }
-                }
-            },
-            destination:{
-                location:{
-                    latLng:{
-                        latitude:endLat,
-                        longitude:endLng
-                    }
-                }
+                "X-Goog-FieldMask":
+                "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.travelAdvisory.tollInfo,routes.legs.steps.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters"
             },
 
-            travelMode:"DRIVE",
+            body:JSON.stringify({
+                origin:{
+                    location:{
+                        latLng:{
+                            latitude:startLat,
+                            longitude:startLng
+                        }
+                    }
+                },
 
-            routeModifiers:{
-                avoidTolls:
-                    !document
-                        .getElementById(
-                            "useToll"
-                        )
-                        .checked
-            }
-})
-    
+                destination:{
+                    location:{
+                        latLng:{
+                            latitude:endLat,
+                            longitude:endLng
+                        }
+                    }
+                },
 
+                travelMode:"DRIVE",
+
+                routeModifiers:{
+                    avoidTolls:avoidTolls,
+                    avoidHighways:avoidHighways
+                },
+
+                extraComputations:[
+                    "TOLLS"
+                ]
+            })
         });
 
     return await response.json();
 }
+function getTollText(route){
 
+    const prices =
+        route
+        ?.travelAdvisory
+        ?.tollInfo
+        ?.estimatedPrice;
+
+    if(!prices || prices.length === 0){
+        return "0円 / 不明";
+    }
+
+    const price =
+        prices[0];
+
+    const units =
+        price.units ?? "0";
+
+    return Number(units).toLocaleString() + "円";
+}
+
+function formatDuration(durationText){
+
+    const seconds =
+        parseInt(durationText);
+
+    const minutes =
+        Math.round(seconds / 60);
+
+    if(minutes >= 60){
+
+        const h =
+            Math.floor(minutes / 60);
+
+        const m =
+            minutes % 60;
+
+        return `${h}時間${m}分`;
+    }
+
+    return `${minutes}分`;
+}
+
+async function compareRoutes(
+    current,
+    destination
+){
+
+    const tollRouteData =
+        await getRoute(
+            current.lat,
+            current.lng,
+            destination.lat,
+            destination.lng,
+            false,
+            false
+        );
+
+    const noTollRouteData =
+        await getRoute(
+            current.lat,
+            current.lng,
+            destination.lat,
+            destination.lng,
+            true,
+            true
+        );
+
+    const tollRoute =
+        tollRouteData.routes[0];
+
+    const noTollRoute =
+        noTollRouteData.routes[0];
+
+    const tollDistance =
+        (tollRoute.distanceMeters / 1000).toFixed(1);
+
+    const noTollDistance =
+        (noTollRoute.distanceMeters / 1000).toFixed(1);
+
+    const tollDuration =
+        formatDuration(
+            tollRoute.duration
+        );
+
+    const noTollDuration =
+        formatDuration(
+            noTollRoute.duration
+        );
+
+    const tollPrice =
+        getTollText(
+            tollRoute
+        );
+
+    document
+    .getElementById(
+        "routeCompare"
+    )
+    .innerHTML =
+    `
+    <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+        <tr>
+            <th></th>
+            <th>高速あり</th>
+            <th>高速なし</th>
+        </tr>
+        <tr>
+            <td>距離</td>
+            <td>${tollDistance} km</td>
+            <td>${noTollDistance} km</td>
+        </tr>
+        <tr>
+            <td>時間</td>
+            <td>${tollDuration}</td>
+            <td>${noTollDuration}</td>
+        </tr>
+        <tr>
+            <td>料金</td>
+            <td>${tollPrice}</td>
+            <td>0円</td>
+        </tr>
+    </table>
+    `;
+}
+
+    
+    
 function calculateDistance(
     lat1,
     lon1,
@@ -1357,18 +1490,28 @@ async function searchPlace(){
 
         const current =
             await getCurrentLocation();
+        compareRoutes(
+            current,
+            destination
+        );
+        const useToll =
+    document
+    .getElementById(
+        "useToll"
+    )
+    .checked;
 
-        const route =
-            await getRoute(
+const route =
+    await getRoute(
+        current.lat,
+        current.lng,
+        destination.lat,
+        destination.lng,
+        !useToll,
+        !useToll
+    );
 
-                current.lat,
-                current.lng,
-
-                destination.lat,
-                destination.lng
-
-            );
-
+      
 console.log(
   JSON.stringify(
     route.routes[0],
