@@ -1005,9 +1005,7 @@ async function compareRoutes(
     current,
     destination
 ){
-console.log(
-    tollRoute
-);
+
     const tollRouteData =
         await getRoute(
             current.lat,
@@ -1030,7 +1028,9 @@ console.log(
 
     const tollRoute =
         tollRouteData.routes[0];
-
+console.log(
+    tollRoute
+);
     const noTollRoute =
         noTollRouteData.routes[0];
 
