@@ -186,70 +186,11 @@ function goHome(){
     searchPlace();
 }
     
-//async function sendToPi(
-//    payload
-//){
-
-    const now =
-        Date.now();
-
-    if(
-        now - lastSendTime <
-        SEND_INTERVAL_MS
-    ){
-        return;
-    }
-
-    lastSendTime =
-        now;
-
-    const url =
-        document
-        .getElementById(
-            "piUrl"
-        )
-        .value;
-
-    try{
-
-        const response =
-            await fetch(
-                url,
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                        "application/json"
-                    },
-
-                    body:JSON.stringify(
-                        payload
-                    )
-                }
-            );
-
-        document
-        .getElementById(
-            "sendStatus"
-        )
-        .innerHTML =
-        "送信OK";
-
-    }
-    catch(error){
-
-        document
-        .getElementById(
-            "sendStatus"
-        )
-        .innerHTML =
-        "送信エラー";
-
-        console.error(
-            error
-        );
-    }
+async function sendToPi(
+    payload
+){
+    // Pi Zero Wが手元にないため、現時点では送信しない
+    return;
 }
     
 function formatDistance(meters){
