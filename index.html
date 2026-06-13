@@ -1559,7 +1559,9 @@ console.log(
             `;
 
         startLocationTracking();
-
+fetch(
+  "http://172.20.10.4:5000/nav?distance=200m&instruction=LEFT"
+);
     }
     
     catch(error){
