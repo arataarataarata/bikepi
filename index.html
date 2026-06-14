@@ -134,6 +134,10 @@ const STEP_CHANGE_DISTANCE_M = 15;
 const REROUTE_THRESHOLD_M = 50;
 const SEND_INTERVAL_MS = 1000;
 
+const OFF_ROUTE_DISTANCE_M = 60;
+const OFF_ROUTE_COUNT_LIMIT = 3;
+const REROUTE_COOLDOWN_MS = 15000;
+const MIN_SPEED_FOR_REROUTE_KMH = 5;
 
 /* =========================================================
    2. 状態管理
@@ -159,7 +163,7 @@ let currentMarker = null;
 
 let bleCharacteristic = null;
 let bleConnected = false;
-
+let offRouteCount = 0;
 
 /* =========================================================
    3. 初期化
