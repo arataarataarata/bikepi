@@ -680,11 +680,27 @@ function updateCurrentStep(lat,lng){
               )
             : "GOAL";
 
-    const line1 =
-        `${arrow} ${formatDistance(remain)}`;
+const line1 =
+    `${formatDistance(remain)} ${arrow}`;
 
-    const line2 =
-        `${latestSpeed}km/h`;
+let line2 = `${latestSpeed}`;
+
+const nextStep =
+    routeSteps[currentStepIndex + 1];
+
+if(nextStep){
+
+    const nextArrow =
+        maneuverToArrow(
+            nextStep.navigationInstruction?.maneuver
+        );
+
+    const nextDistance =
+        nextStep.distanceMeters ?? 0;
+
+    line2 =
+    `${formatDistance(nextDistance)} ${nextArrow} ${Math.round(latestSpeed)}`;
+}
 
     updateOledPreview(line1,line2);
 
