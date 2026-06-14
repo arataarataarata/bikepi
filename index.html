@@ -139,6 +139,7 @@ const OFF_ROUTE_COUNT_LIMIT = 3;
 const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 
+
 /* =========================================================
    2. 状態管理
 ========================================================= */
@@ -164,6 +165,7 @@ let currentMarker = null;
 let bleCharacteristic = null;
 let bleConnected = false;
 let offRouteCount = 0;
+let lastRouteDistance
 
 /* =========================================================
    3. 初期化
