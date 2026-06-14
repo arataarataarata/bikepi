@@ -173,8 +173,14 @@ window.onload = function(){
 /* =========================================================
    4. BLE処理
 ========================================================= */
-
 async function connectBle(){
+
+    if(!navigator.bluetooth){
+        alert("このブラウザはWeb Bluetoothに対応していません。iPhone Safari/Chromeでは使用できません。");
+        document.getElementById("bleStatus").innerHTML =
+            "Web Bluetooth非対応";
+        return;
+    }
 
     try{
         const device =
@@ -205,19 +211,16 @@ async function connectBle(){
         document.getElementById("bleStatus").innerHTML =
             "BLE接続済み";
 
-        await sendToEsp32Text(
-            "BLE OK,READY"
-        );
+        await sendToEsp32Text("BLE OK,READY");
 
     }
     catch(error){
-
         console.error(error);
-
         document.getElementById("bleStatus").innerHTML =
             "BLE接続失敗";
     }
 }
+
 
 async function sendToEsp32Text(text){
 
