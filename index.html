@@ -649,8 +649,8 @@ function updateCurrentStep(lat,lng){
     }
 
     if(currentStepIndex >= routeSteps.length){
-        updateOledPreview("GOAL","0km/h");
-        sendToEsp32Text("GOAL,0km/h");
+        updateOledPreview("GOAL","0");
+        sendToEsp32Text("GOAL,0");
         return;
     }
 
@@ -680,28 +680,20 @@ function updateCurrentStep(lat,lng){
               )
             : "GOAL";
 
-const line1 =
-    `${formatDistance(remain)} ${arrow}`;
+    const line1 =
+        `${formatDistance(remain)} ${arrow}`;
 
-let line2 = `${latestSpeed}`;
+    let line2 =
+        `${latestSpeed}`;
 
+    if(nextStep){
 
-if(nextStep){
+        const nextDistance =
+            nextStep.distanceMeters ?? 0;
 
-    const nextArrow =
-        maneuverToArrow(
-            nextStep.navigationInstruction?.maneuver
-        );
-
-    const nextDistance =
-        nextStep.distanceMeters ?? 0;
-
-    
-    line2 =
-    `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}`;
-}
-    
-}
+        line2 =
+            `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}`;
+    }
 
     updateOledPreview(line1,line2);
 
@@ -749,7 +741,6 @@ if(nextStep){
         }
     }
 }
-
 async function recalculateRoute(currentLat,currentLng){
 
     if(!destination){
