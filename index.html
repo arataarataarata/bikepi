@@ -780,24 +780,24 @@ function maneuverToArrow(m){
     switch(m){
 
         case "TURN_LEFT":
-            return "←";
+            return "Left";
 
         case "TURN_RIGHT":
-            return "→";
+            return "Right";
 
         case "TURN_SLIGHT_LEFT":
-            return "↖";
+            return "Slight-L";
 
         case "TURN_SLIGHT_RIGHT":
-            return "↗";
+            return "Slight-R";
 
         case "U_TURN_LEFT":
         case "U_TURN_RIGHT":
-            return "↺";
+            return "U-turn";
 
         case "STRAIGHT":
         default:
-            return "↑";
+            return "Straight";
     }
 }
 
@@ -1559,10 +1559,7 @@ console.log(
             `;
 
         startLocationTracking();
-fetch(
-  "http://172.20.10.4:5000/nav?distance=200m&instruction=LEFT"
-);
-    }
+   }
     
     catch(error){
 
