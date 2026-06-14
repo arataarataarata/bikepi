@@ -775,6 +775,10 @@ async function recalculateRoute(currentLat,currentLng){
     catch(error){
         console.error(error);
     }
+
+    offRouteCount = 0;
+    lastRouteDistance = null;
+    lastRerouteTime = Date.now();
 }
 function checkRouteDeviation(lat, lng){
 
