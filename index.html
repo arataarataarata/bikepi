@@ -776,8 +776,7 @@ async function recalculateRoute(currentLat,currentLng){
         console.error(error);
     }
 }
-
-function checkRouteDeviation(lat,lng){
+function checkRouteDeviation(lat, lng){
 
     if(!currentRoute){
         return;
@@ -792,6 +791,10 @@ function checkRouteDeviation(lat,lng){
 
     const points =
         decodePolyline(encoded);
+
+    if(points.length === 0){
+        return;
+    }
 
     let minDistance =
         Number.MAX_VALUE;
@@ -811,14 +814,68 @@ function checkRouteDeviation(lat,lng){
         }
     }
 
-    if(minDistance > REROUTE_THRESHOLD_M){
+    const now =
+        Date.now();
 
-        document.getElementById("debugInfo").innerHTML +=
-            `<br><b>REROUTE判定 : ${Math.round(minDistance)}m</b>`;
+    const isFarFromRoute =
+        minDistance > OFF_ROUTE_DISTANCE_M;
 
-        recalculateRoute(lat,lng);
+    const isGettingWorse =
+        lastRouteDistance !== null &&
+        minDistance > lastRouteDistance + 10;
+
+    const isMoving =
+        latestSpeed >= MIN_SPEED_FOR_REROUTE_KMH;
+
+    const cooldownPassed =
+        now - lastRerouteTime > REROUTE_COOLDOWN_MS;
+
+    if(
+        isFarFromRoute &&
+        isGettingWorse &&
+        isMoving
+    ){
+        offRouteCount++;
+    }
+    else if(
+        minDistance < OFF_ROUTE_DISTANCE_M * 0.6
+    ){
+        offRouteCount = 0;
+    }
+
+    lastRouteDistance = minDistance;
+
+    document.getElementById("debugInfo").innerHTML +=
+        `
+        <br>ROUTE_DIST : ${Math.round(minDistance)}m
+        <br>OFF_COUNT : ${offRouteCount}
+        `;
+
+    if(
+        offRouteCount >= OFF_ROUTE_COUNT_LIMIT &&
+        cooldownPassed
+    ){
+
+        offRouteCount = 0;
+        lastRouteDistance = null;
+        lastRerouteTime = now;
+
+        updateOledPreview(
+            "REROUTE",
+            "SEARCHING"
+        );
+
+        sendToEsp32Text(
+            "REROUTE,SEARCHING"
+        );
+
+        recalculateRoute(
+            lat,
+            lng
+        );
     }
 }
+
 
 function getRemainingDistanceToStep(lat,lng,step){
 
