@@ -696,8 +696,11 @@ if(nextStep){
     const nextDistance =
         nextStep.distanceMeters ?? 0;
 
+    
     line2 =
-    `${formatDistance(nextDistance)} ${nextArrow} ${Math.round(latestSpeed)}`;
+    `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}`;
+}
+    
 }
 
     updateOledPreview(line1,line2);
