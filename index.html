@@ -684,7 +684,7 @@ function updateCurrentStep(lat,lng){
         `${formatDistance(remain)} ${arrow}`;
 
     let line2 =
-        `${latestSpeed}`;
+        `${latestSpeed}km/h`;
 
     if(nextStep){
 
@@ -692,7 +692,7 @@ function updateCurrentStep(lat,lng){
             nextStep.distanceMeters ?? 0;
 
         line2 =
-            `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}`;
+            `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}km/h`;
     }
 
     updateOledPreview(line1,line2);
