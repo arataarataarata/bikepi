@@ -781,13 +781,18 @@ async function recalculateRoute(currentLat,currentLng){
 
     try{
 
+        const useToll =
+        document.getElementById("useToll").checked;
+
         const routeData =
-            await getRoute(
-                currentLat,
-                currentLng,
-                destination.lat,
-                destination.lng
-            );
+        await getRoute(
+            currentLat,
+            currentLng,
+            destination.lat,
+            destination.lng,
+            !useToll,
+            false
+        );
 
         if(!routeData.routes || routeData.routes.length === 0){
             return;
