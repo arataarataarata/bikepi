@@ -727,19 +727,16 @@ function updateCurrentStep(lat,lng){
             : "GOAL";
 
     const line1 =
-        `${formatDistance(remain)} ${arrow}`;
+    `${arrow} ${formatDistance(remain)} ${nextArrow}`;
 
-    let line2 =
-        `${latestSpeed}km/h`;
+let line2 =
+    `${latestSpeed}km/h`;
 
-    if(nextStep){
-
-        const nextDistance =
-            nextStep.distanceMeters ?? 0;
-
-        line2 =
-            `${formatDistance(nextDistance)} ${nextArrow} ${latestSpeed}km/h`;
-    }
+if(latestAccuracy !== null){
+    line2 =
+        `${latestSpeed}km/h ACC:${latestAccuracy}m`;
+}
+    
 
     updateOledPreview(line1,line2);
 
