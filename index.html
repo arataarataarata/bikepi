@@ -852,6 +852,19 @@ function checkRouteDeviation(lat, lng){
     const points =
         decodePolyline(encoded);
 
+
+console.log(
+    "ROUTE DIST",
+    currentRoute.distanceMeters,
+    "POINTS",
+    points.length,
+    "M_PER_POINT",
+    Math.round(
+        currentRoute.distanceMeters /
+        points.length
+    )
+);
+
     if(points.length === 0){
         return;
     }
