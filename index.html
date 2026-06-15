@@ -956,11 +956,11 @@ function getRemainingDistanceToStep(lat,lng,step){
         }
     });
 
-    let remain = 0;
+    let routeRemain = 0;
 
     for(let i = nearestIndex; i < points.length - 1; i++){
 
-        remain +=
+        routeRemain +=
             calculateDistance(
                 points[i][0],
                 points[i][1],
@@ -969,7 +969,23 @@ function getRemainingDistanceToStep(lat,lng,step){
             );
     }
 
-    return Math.round(remain);
+    const endPoint =
+        points[points.length - 1];
+
+    const directRemain =
+        calculateDistance(
+            lat,
+            lng,
+            endPoint[0],
+            endPoint[1]
+        );
+
+    return Math.round(
+        Math.min(
+            routeRemain,
+            directRemain
+        )
+    );
 }
 
 
