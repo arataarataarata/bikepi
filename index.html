@@ -92,6 +92,9 @@ button{
 <h3>OLED表示イメージ</h3>
 <div id="oledArrow">Straight 0m</div>
 <div id="oledSpeed">0km/h</div>
+<div id="oledTime" style="font-size:14px;margin-top:8px;color:#666;">
+    update: --
+</div>
 </div>
 
 <div class="section">
@@ -1007,9 +1010,14 @@ function updateOledPreview(line1,line2){
 
     document.getElementById("oledSpeed").innerHTML =
         line2;
+
+    const now =
+        new Date();
+
+    document.getElementById("oledTime").innerHTML =
+        "update: " +
+        now.toLocaleTimeString();
 }
-
-
 
 function buildRouteList(steps){
 
