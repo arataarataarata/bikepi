@@ -369,18 +369,18 @@ async function searchPlace(){
 
         compareRoutes(current,destination);
 
-       const useToll =
+const useToll =
     document.getElementById("useToll").checked;
 
-        const routeData =
-            await getRoute(
-                currentLat,
-                currentLng,
-                destination.lat,
-                destination.lng,
-                !useToll,
-                !useToll
-            );
+const routeData =
+    await getRoute(
+        current.lat,
+        current.lng,
+        destination.lat,
+        destination.lng,
+        !useToll,
+        !useToll
+    );
 
         if(!routeData.routes || routeData.routes.length === 0){
             throw new Error("ルートが取得できませんでした");
