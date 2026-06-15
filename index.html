@@ -372,14 +372,17 @@ async function searchPlace(){
         const useToll =
             document.getElementById("useToll").checked;
 
+       const useToll =
+    document.getElementById("useToll").checked;
+
         const routeData =
             await getRoute(
-                current.lat,
-                current.lng,
+                currentLat,
+                currentLng,
                 destination.lat,
                 destination.lng,
                 !useToll,
-                false
+                !useToll
             );
 
         if(!routeData.routes || routeData.routes.length === 0){
@@ -781,17 +784,17 @@ async function recalculateRoute(currentLat,currentLng){
 
     try{
 
-        const useToll =
-        document.getElementById("useToll").checked;
+       const useToll =
+    document.getElementById("useToll").checked;
 
-        const routeData =
+    const routeData =
         await getRoute(
             currentLat,
             currentLng,
             destination.lat,
             destination.lng,
             !useToll,
-            false
+            !useToll
         );
 
         if(!routeData.routes || routeData.routes.length === 0){
