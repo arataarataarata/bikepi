@@ -94,6 +94,10 @@ button{
 <div id="oledSpeed">0km/h</div>
 <div id="oledTime" style="font-size:14px;margin-top:8px;color:#666;">
     update: --
+<div id="oledAccuracy">
+    ACC: --
+</div>
+    
 </div>
 </div>
 
@@ -173,7 +177,7 @@ let lastRerouteTime = 0;
 let latestLat = null;
 let latestLng = null;
 let displayTimer = null;
-
+let latestAccuracy = null;
 
     
 /* =========================================================
@@ -598,7 +602,11 @@ function startLocationTracking(){
 
                 latestLng =
                     pos.coords.longitude;
-
+                
+                latestAccuracy =
+                    Math.round(
+                    pos.coords.accuracy
+                    );
                 latestSpeed =
                     calculateSpeed(
                         latestLat,
@@ -1017,8 +1025,15 @@ function updateOledPreview(line1,line2){
     document.getElementById("oledTime").innerHTML =
         "update: " +
         now.toLocaleTimeString();
-}
 
+    document.getElementById("oledAccuracy").innerHTML =
+        "ACC: " +
+        (
+            latestAccuracy !== null
+            ? latestAccuracy + "m"
+            : "--"
+        );
+}
 function buildRouteList(steps){
 
     let html = "";
