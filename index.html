@@ -1027,8 +1027,10 @@ function buildRouteList(steps){
             step.distanceMeters ?? 0;
 
         const instruction =
-            step.navigationInstruction?.instructions ?? "";
-
+            step.navigationInstruction?.instructions ??
+            step.navigationInstruction?.instruction ??
+            "";
+        
         html +=
             `
             <div class="route-step">
@@ -1184,6 +1186,20 @@ function maneuverToArrow(m){
             return "U-turn";
 
         case "STRAIGHT":
+
+        case "MERGE":
+            return "Merge";
+
+        case "FORK_LEFT":
+            return "Fork-L";
+
+        case "FORK_RIGHT":
+            return "Fork-R";
+
+        case "ROUNDABOUT_LEFT":
+        case "ROUNDABOUT_RIGHT":
+            return "Round";
+            
         default:
             return "Straight";
     }
