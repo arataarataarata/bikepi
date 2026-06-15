@@ -379,7 +379,7 @@ async function searchPlace(){
                 destination.lat,
                 destination.lng,
                 !useToll,
-                !useToll
+                false
             );
 
         if(!routeData.routes || routeData.routes.length === 0){
