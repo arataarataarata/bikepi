@@ -567,7 +567,9 @@ async function getCurrentLocation(){
             reject,
 
             {
-                enableHighAccuracy:true
+                enableHighAccuracy:true,
+                maximumAge:0,
+                timeout:10000
             }
         );
     });
