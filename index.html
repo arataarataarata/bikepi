@@ -179,7 +179,7 @@ let latestLat = null;
 let latestLng = null;
 let displayTimer = null;
 let latestAccuracy = null;
-
+let routePoints = [];
     
 /* =========================================================
    3. 初期化
@@ -400,6 +400,11 @@ const routeData =
         routeSteps =
             currentRoute.legs[0].steps;
 
+        routePoints =
+            decodePolyline(
+            currentRoute.polyline.encodedPolyline
+        );
+        
         currentStepIndex = 0;
 
         drawRoute(
@@ -815,6 +820,10 @@ async function recalculateRoute(currentLat,currentLng){
         routeSteps =
             currentRoute.legs[0].steps;
 
+        routePoints =
+            decodePolyline(
+            currentRoute.polyline.encodedPolyline
+        );
         currentStepIndex = 0;
 
         drawRoute(
@@ -842,16 +851,12 @@ function checkRouteDeviation(lat, lng){
         return;
     }
 
-    const encoded =
-        currentRoute.polyline?.encodedPolyline;
-
-    if(!encoded){
+    if(!routePoints || routePoints.length === 0){
         return;
     }
 
     const points =
-        decodePolyline(encoded);
-
+        routePoints;
 
 console.log(
     "ROUTE DIST",
