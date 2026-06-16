@@ -534,9 +534,9 @@ async function getRoute(
                             }
                         }
                     },
-
                     travelMode:"DRIVE",
-
+                    routingPreference:"TRAFFIC_AWARE_OPTIMAL",
+                    trafficModel:"BEST_GUESS",
                     routeModifiers:{
                         avoidTolls:avoidTolls,
                         avoidHighways:avoidHighways,
