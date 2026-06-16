@@ -147,7 +147,26 @@ const OFF_ROUTE_COUNT_LIMIT = 3;
 const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
+const maneuverMap = {
+  TURN_LEFT: 1,
+  TURN_RIGHT: 2,
+  STRAIGHT: 3,
+  TURN_SLIGHT_LEFT: 4,
+  TURN_SLIGHT_RIGHT: 5,
+  TURN_SHARP_LEFT: 6,
+  TURN_SHARP_RIGHT: 7,
+  U_TURN_LEFT: 8,
+  U_TURN_RIGHT: 9,
+  ROUNDABOUT_LEFT: 10,
+  ROUNDABOUT_RIGHT: 11,
+  MERGE: 12,
+  FORK_LEFT: 13,
+  FORK_RIGHT: 14,
+  KEEP_LEFT: 15,
+  KEEP_RIGHT: 16
+};
 
+    
 /* =========================================================
    2. 状態管理
 ========================================================= */
@@ -742,6 +761,8 @@ function updateCurrentStep(lat,lng){
     const maneuver =
         step.navigationInstruction?.maneuver ?? "STRAIGHT";
 
+    const arrowId =
+        maneuverMap[maneuver] || 3;
     const arrow =
         maneuverToArrow(maneuver);
 
