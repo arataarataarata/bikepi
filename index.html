@@ -290,6 +290,10 @@ function initMap(){
                 }
             }
         );
+    const trafficLayer =
+        new google.maps.TrafficLayer();
+
+        trafficLayer.setMap(map);
 }
 
 function drawRoute(encodedPolyline){
