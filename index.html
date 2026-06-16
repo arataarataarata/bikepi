@@ -868,34 +868,95 @@ console.log(
     if(points.length === 0){
         return;
     }
+let minDistance =
+    Number.MAX_VALUE;
 
-    let minDistance =
-        Number.MAX_VALUE;
+let nearestIndex = 0;
 
-    for(const point of points){
+points.forEach((point,index)=>{
 
-        const d =
-            calculateDistance(
-                lat,
-                lng,
-                point[0],
-                point[1]
+    const d =
+        calculateDistance(
+            lat,
+            lng,
+            point[0],
+            point[1]
+        );
+
+    if(d < minDistance){
+        minDistance = d;
+        nearestIndex = index;
+    }
+});
+let correctedDistance =
+    minDistance;
+
+const accuracyThreshold =
+    latestAccuracy !== null
+        ? latestAccuracy
+        : 0;
+
+if(minDistance > accuracyThreshold){
+
+    let segmentDistance =
+        minDistance;
+
+    if(nearestIndex > 0){
+
+        const prev =
+            points[nearestIndex - 1];
+
+        const current =
+            points[nearestIndex];
+
+        segmentDistance =
+            Math.min(
+                segmentDistance,
+                calculateDistanceToSegment(
+                    lat,
+                    lng,
+                    prev[0],
+                    prev[1],
+                    current[0],
+                    current[1]
+                )
             );
-
-        if(d < minDistance){
-            minDistance = d;
-        }
     }
 
+    if(nearestIndex < points.length - 1){
+
+        const current =
+            points[nearestIndex];
+
+        const next =
+            points[nearestIndex + 1];
+
+        segmentDistance =
+            Math.min(
+                segmentDistance,
+                calculateDistanceToSegment(
+                    lat,
+                    lng,
+                    current[0],
+                    current[1],
+                    next[0],
+                    next[1]
+                )
+            );
+    }
+
+    correctedDistance =
+        segmentDistance;
+}
     const now =
         Date.now();
 
     const isFarFromRoute =
-        minDistance > OFF_ROUTE_DISTANCE_M;
+        correctedDistance > OFF_ROUTE_DISTANCE_M;
 
     const isGettingWorse =
         lastRouteDistance !== null &&
-        minDistance > lastRouteDistance + 10;
+        correctedDistance > lastRouteDistance + 10;
 
     const isMoving =
         latestSpeed >= MIN_SPEED_FOR_REROUTE_KMH;
@@ -915,14 +976,13 @@ console.log(
     ){
         offRouteCount = 0;
     }
-
-    lastRouteDistance = minDistance;
-
+    lastRouteDistance = correctedDistance;
+    
     document.getElementById("debugInfo").innerHTML +=
         `
-        <br>ROUTE_DIST : ${Math.round(minDistance)}m
-        <br>OFF_COUNT : ${offRouteCount}
-        `;
+    <br>ROUTE_DIST : ${Math.round(correctedDistance)}m
+    <br>POINT_DIST : ${Math.round(minDistance)}m
+    <br>OFF_COUNT : ${offRouteCount}        `;
 
     if(
         offRouteCount >= OFF_ROUTE_COUNT_LIMIT &&
@@ -1299,7 +1359,75 @@ function calculateDistance(lat1,lng1,lat2,lng2){
             Math.sqrt(1 - a)
         );
 }
+function calculateDistanceToSegment(lat,lng,lat1,lng1,lat2,lng2){
 
+    const R = 6371000;
+
+    const x =
+        (lng - lng1) *
+        Math.cos(
+            ((lat1 + lat2) / 2) *
+            Math.PI / 180
+        ) *
+        Math.PI / 180 *
+        R;
+
+    const y =
+        (lat - lat1) *
+        Math.PI / 180 *
+        R;
+
+    const x2 =
+        (lng2 - lng1) *
+        Math.cos(
+            ((lat1 + lat2) / 2) *
+            Math.PI / 180
+        ) *
+        Math.PI / 180 *
+        R;
+
+    const y2 =
+        (lat2 - lat1) *
+        Math.PI / 180 *
+        R;
+
+    const len2 =
+        x2 * x2 + y2 * y2;
+
+    if(len2 === 0){
+        return calculateDistance(
+            lat,
+            lng,
+            lat1,
+            lng1
+        );
+    }
+
+    let t =
+        (x * x2 + y * y2) / len2;
+
+    t =
+        Math.max(
+            0,
+            Math.min(1,t)
+        );
+
+    const projX =
+        t * x2;
+
+    const projY =
+        t * y2;
+
+    const dx =
+        x - projX;
+
+    const dy =
+        y - projY;
+
+    return Math.sqrt(
+        dx * dx + dy * dy
+    );
+}
 function decodePolyline(encoded){
 
     let points = [];
