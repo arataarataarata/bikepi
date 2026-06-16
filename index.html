@@ -1155,22 +1155,25 @@ function buildRouteList(steps){
             step.navigationInstruction?.instructions ??
             step.navigationInstruction?.instruction ??
             "";
-        
+
+        const shortInstruction =
+            shortenInstruction(instruction);
+
         html +=
             `
             <div class="route-step">
                 <b>${index + 1}</b>
                 ${arrow} ${formatDistance(distance)}
                 <br>
-                <small>${instruction}</small>
+                <b>短縮:</b> ${shortInstruction}
+                <br>
+                <small><b>元:</b> ${instruction}</small>
             </div>
             `;
     });
 
     return html;
 }
-
-
 /* =========================================================
    10. 高速利用比較
 ========================================================= */
