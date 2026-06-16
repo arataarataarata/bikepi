@@ -707,7 +707,12 @@ function shortenInstruction(text){
         .replace(/方面の標識に従う/g,"方面")
         .replace(/で左車線を使用して/g," 左車線")
         .replace(/で右車線を使用して/g," 右車線")
-        .replace(/有料区間/g,"")
+        .replace(/有料区間/g,"$")
+        .replace(/斜め/g,"斜")
+        .replace(/都心環状線/g,"環状")
+        .replace(/中央環状線/g,"環状")
+        .replace(/東北自動車道/g,"東北道")
+        
         .replace(/\s+/g," ")
         .trim()
         .substring(0,16);
