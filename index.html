@@ -1038,12 +1038,12 @@ if(minDistance > accuracyThreshold){
         now - lastRerouteTime > REROUTE_COOLDOWN_MS;
 
     if(
-        isFarFromRoute &&
-        isGettingWorse &&
-        isMoving
-    ){
-        offRouteCount++;
-    }
+    correctedDistance > accuracyBuffer &&
+    isMoving
+){
+    offRouteCount++;
+}
+   
     else if(
         minDistance < OFF_ROUTE_DISTANCE_M * 0.6
     ){
