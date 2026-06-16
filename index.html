@@ -146,7 +146,7 @@ const OFF_ROUTE_DISTANCE_M = 60;
 const OFF_ROUTE_COUNT_LIMIT = 3;
 const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
-
+const GUIDE_TEXT_DISTANCE_M = 150;
 
 /* =========================================================
    2. 状態管理
@@ -692,7 +692,22 @@ function calculateSpeed(lat,lng){
 /* =========================================================
    8. ナビ進行処理
 ========================================================= */
+function shortenInstruction(text){
 
+    if(!text){
+        return "";
+    }
+
+    return text
+        .replace(/首都高速/g,"首高")
+        .replace(/方面の標識に従う/g,"方面")
+        .replace(/で左車線を使用して/g," 左車線")
+        .replace(/で右車線を使用して/g," 右車線")
+        .replace(/有料区間/g,"")
+        .replace(/\s+/g," ")
+        .trim()
+        .substring(0,16);
+}
 function updateCurrentStep(lat,lng){
 
     if(routeSteps.length === 0){
@@ -734,13 +749,24 @@ function updateCurrentStep(lat,lng){
     const line1 =
     `${arrow} ${formatDistance(remain)} ${nextArrow}`;
 
-let line2 =
-    `${latestSpeed}km/h`;
+    let line2 =
+        `${latestSpeed}km/h ACC:${latestAccuracy ?? "--"}m`;
 
-if(latestAccuracy !== null){
-    line2 =
-        `${latestSpeed}km/h ACC:${latestAccuracy}m`;
-}
+    if(remain <= GUIDE_TEXT_DISTANCE_M){
+
+        const instruction =
+            step.navigationInstruction?.instructions ??
+            step.navigationInstruction?.instruction ??
+            "";
+
+        const shortInstruction =
+            shortenInstruction(instruction);
+
+        if(shortInstruction){
+            line2 =
+                shortInstruction;
+        }
+    }
     
 
     updateOledPreview(line1,line2);
