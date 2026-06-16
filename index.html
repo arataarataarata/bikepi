@@ -762,21 +762,24 @@ function updateCurrentStep(lat,lng){
         step.navigationInstruction?.maneuver ?? "STRAIGHT";
 
 
-    const arrow =
-        maneuverToArrow(maneuver);
+const arrowId =
+    maneuverToArrow(maneuver);
 
-    const nextStep =
-        routeSteps[currentStepIndex + 1];
+const nextStep =
+    routeSteps[currentStepIndex + 1];
 
-    const nextArrow =
-        nextStep
-            ? maneuverToArrow(
-                nextStep.navigationInstruction?.maneuver
-              )
-            : "GOAL";
+const nextArrowId =
+    nextStep
+        ? maneuverToArrow(
+            nextStep.navigationInstruction?.maneuver ?? "STRAIGHT"
+          )
+        : 3;
 
-    const line1 =
-    `${arrow} ${formatDistance(remain)} ${nextArrow}`;
+const distanceText =
+    formatDistance(remain);
+
+const line1 =
+    `${arrowId}|${distanceText}|${nextArrowId}`;
 
     let line2 =
         `${latestSpeed}km/h ACC:${latestAccuracy ?? "--"}m`;
@@ -805,15 +808,16 @@ function updateCurrentStep(lat,lng){
 
     updateOledPreview(line1,line2);
 
-    const sendText =
-        `${line1},${line2}`;
+const sendText =
+    `${arrowId}|${distanceText}|${nextArrowId}|${line2}`;
 
-    sendToEsp32Text(sendText);
-
+sendToEsp32Text(sendText);
+    
     const payload = {
         line1:line1,
         line2:line2,
-        arrow:arrow,
+        arrow_id:arrowId,
+        next_arrow_id:nextArrowId,
         next_arrow:nextArrow,
         remain_m:remain,
         speed_kmh:latestSpeed,
@@ -831,7 +835,7 @@ function updateCurrentStep(lat,lng){
         SPEED : ${latestSpeed} km/h<br>
         STEP : ${currentStepIndex + 1} / ${routeSteps.length}<br>
         REMAIN : ${remain} m<br>
-        NEXT : ${nextArrow}
+        NEXT : ${nextArrowId}
         `;
 
     checkRouteDeviation(lat,lng);
