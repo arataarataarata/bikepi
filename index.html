@@ -1319,23 +1319,24 @@ function maneuverToArrow(m){
             return "↰";
 
         case "U_TURN_LEFT":
+            return "↶";
         case "U_TURN_RIGHT":
-            return "U";
+            return "↷";
 
         case "STRAIGHT":
-            return "ST";
+            return "↑";
         case "MERGE":
-            return "M";
+            return "↗↖";
 
         case "FORK_LEFT":
-            return "f-L";
+            return "↖";
 
         case "FORK_RIGHT":
-            return "f-R";
+            return "↗";
 
         case "ROUNDABOUT_LEFT":
         case "ROUNDABOUT_RIGHT":
-            return "Rnd";
+            return "↻";
             
         default:
             return "Go";
