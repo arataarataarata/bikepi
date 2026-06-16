@@ -996,8 +996,13 @@ if(minDistance > accuracyThreshold){
     const now =
         Date.now();
 
+    const accuracyBuffer =
+    latestAccuracy !== null
+        ? latestAccuracy + 10
+        : OFF_ROUTE_DISTANCE_M;
+
     const isFarFromRoute =
-        correctedDistance > OFF_ROUTE_DISTANCE_M;
+        correctedDistance > accuracyBuffer;
 
     const isGettingWorse =
         lastRouteDistance !== null &&
@@ -1028,6 +1033,7 @@ if(minDistance > accuracyThreshold){
     <br>ROUTE_DIST : ${Math.round(correctedDistance)}m
     <br>POINT_DIST : ${Math.round(minDistance)}m
     <br>OFF_COUNT : ${offRouteCount}        `;
+    <br>ROUTE_LIMIT : ${Math.round(accuracyBuffer)}m
 
     if(
         offRouteCount >= OFF_ROUTE_COUNT_LIMIT &&
