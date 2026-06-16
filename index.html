@@ -1306,42 +1306,42 @@ function maneuverToArrow(m){
     switch(m){
 
         case "TURN_LEFT":
-            return "←";
+            return "L";
 
         case "TURN_RIGHT":
-            return "→";
+            return "R";
 
         case "TURN_SLIGHT_LEFT":
-            return "↖";
+            return "sl-L";
 
         case "TURN_SLIGHT_RIGHT":
-            return "↗";
+            return "sl-L";
 
         case "TURN_SHARP_LEFT":
-            return "↱";
+            return "sh-L";
 
         case "TURN_SHARP_RIGHT":
-            return "↰";
+            return "sh-R";
 
         case "U_TURN_LEFT":
-            return "↶";
+            return "U";
         case "U_TURN_RIGHT":
-            return "↷";
+            return "U";
 
         case "STRAIGHT":
-            return "↑";
+            return "Str";
         case "MERGE":
-            return "↗↖";
+            return "Mrg";
 
         case "FORK_LEFT":
-            return "↖";
+            return "fk-L";
 
         case "FORK_RIGHT":
-            return "↗";
+            return "fk-R";
 
         case "ROUNDABOUT_LEFT":
         case "ROUNDABOUT_RIGHT":
-            return "↻";
+            return "Round";
             
         default:
             return "Go";
