@@ -758,10 +758,15 @@ function updateCurrentStep(lat,lng){
 
     if(remain <= GUIDE_TEXT_DISTANCE_M){
 
-        const instruction =
-            step.navigationInstruction?.instructions ??
-            step.navigationInstruction?.instruction ??
-            "";
+    const guideStep =
+        nextStep ?? step;
+
+    const instruction =
+        guideStep.navigationInstruction?.instructions ??
+        guideStep.navigationInstruction?.instruction ??
+        "";
+        
+        
 
         const shortInstruction =
             shortenInstruction(instruction);
