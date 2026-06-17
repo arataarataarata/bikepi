@@ -1202,17 +1202,19 @@ function buildRouteList(steps){
         const shortInstruction =
             shortenInstruction(instruction);
 
-        html +=
-            `
-            <div class="route-step">
-                <b>${index + 1}</b>
-                ${arrow} ${formatDistance(distance)}
-                <br>
-                <b>短縮:</b> ${shortInstruction}
-                <br>
-                <small><b>元:</b> ${instruction}</small>
-            </div>
-            `;
+html +=
+    `
+    <div class="route-step">
+        <b>${index + 1}</b>
+        ${arrow} ${formatDistance(distance)}
+        <br>
+        <b>maneuver:</b> ${maneuver}
+        <br>
+        <b>短縮:</b> ${shortInstruction}
+        <br>
+        <small><b>元:</b> ${instruction}</small>
+    </div>
+    `;
     });
 
     return html;
@@ -1357,7 +1359,7 @@ function maneuverToArrow(m) {
     "KEEP_RIGHT": 16
   };
 
-  return map[m] || 3;
+  return map[m] || 99;
 }
 
     
