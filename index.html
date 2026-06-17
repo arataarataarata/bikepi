@@ -808,8 +808,13 @@ const line1 =
 
     updateOledPreview(line1,line2);
 
+const nextManeuver =
+    nextStep
+        ? nextStep.navigationInstruction?.maneuver ?? "UNKNOWN"
+        : "GOAL";
+    
 const sendText =
-    `${arrowId}|${distanceText}|${nextArrowId}|${line2}`;
+    `${arrowId}|${distanceText}|${nextArrowId}|${nextManeuver}|${line2}`;
 
 sendToEsp32Text(sendText);
     
