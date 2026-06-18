@@ -98,8 +98,6 @@ button{
 <div id="oledAccuracy">
     ACC: --
 </div>
-    
-
 </div>
 
 <div class="section">
@@ -147,26 +145,7 @@ const OFF_ROUTE_COUNT_LIMIT = 3;
 const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
-const maneuverMap = {
-  TURN_LEFT: 1,
-  TURN_RIGHT: 2,
-  STRAIGHT: 3,
-  TURN_SLIGHT_LEFT: 4,
-  TURN_SLIGHT_RIGHT: 5,
-  TURN_SHARP_LEFT: 6,
-  TURN_SHARP_RIGHT: 7,
-  U_TURN_LEFT: 8,
-  U_TURN_RIGHT: 9,
-  ROUNDABOUT_LEFT: 10,
-  ROUNDABOUT_RIGHT: 11,
-  MERGE: 12,
-  FORK_LEFT: 13,
-  FORK_RIGHT: 14,
-  KEEP_LEFT: 15,
-  KEEP_RIGHT: 16
-};
 
-    
 /* =========================================================
    2. 状態管理
 ========================================================= */
@@ -189,6 +168,7 @@ let map = null;
 let routeLine = null;
 let currentMarker = null;
 
+let bleDevice = null;
 let bleCharacteristic = null;
 let bleConnected = false;
 let offRouteCount = 0;
@@ -199,7 +179,7 @@ let latestLng = null;
 let displayTimer = null;
 let latestAccuracy = null;
 let routePoints = [];
-    
+
 /* =========================================================
    3. 初期化
 ========================================================= */
@@ -222,7 +202,7 @@ async function connectBle(){
     }
 
     try{
-        const device =
+        bleDevice =
             await navigator.bluetooth.requestDevice({
                 filters:[
                     { name:"BikeNaviESP32" }
@@ -232,8 +212,14 @@ async function connectBle(){
                 ]
             });
 
+        // 切断イベントを検知して状態を更新する
+        bleDevice.addEventListener(
+            "gattserverdisconnected",
+            onBleDisconnected
+        );
+
         const server =
-            await device.gatt.connect();
+            await bleDevice.gatt.connect();
 
         const service =
             await server.getPrimaryService(
@@ -258,6 +244,13 @@ async function connectBle(){
         document.getElementById("bleStatus").innerHTML =
             "BLE接続失敗";
     }
+}
+
+function onBleDisconnected(){
+    bleConnected = false;
+    bleCharacteristic = null;
+    document.getElementById("bleStatus").innerHTML =
+        "BLE切断";
 }
 
 
@@ -285,6 +278,33 @@ async function sendToEsp32Text(text){
     catch(error){
         console.error("BLE send error:", error);
         bleConnected = false;
+        bleCharacteristic = null;
+
+        document.getElementById("bleStatus").innerHTML =
+            "BLE送信エラー";
+    }
+}
+
+// レート制限をスキップして即時送信する（REROUTE等の重要メッセージ用）
+async function sendToEsp32Force(text){
+
+    if(!bleConnected || !bleCharacteristic){
+        return;
+    }
+
+    lastSendTime = Date.now();
+
+    try{
+        const encoder = new TextEncoder();
+
+        await bleCharacteristic.writeValue(
+            encoder.encode(text)
+        );
+    }
+    catch(error){
+        console.error("BLE send error:", error);
+        bleConnected = false;
+        bleCharacteristic = null;
 
         document.getElementById("bleStatus").innerHTML =
             "BLE送信エラー";
@@ -400,18 +420,18 @@ async function searchPlace(){
 
         compareRoutes(current,destination);
 
-const useToll =
-    document.getElementById("useToll").checked;
+        const useToll =
+            document.getElementById("useToll").checked;
 
-const routeData =
-    await getRoute(
-        current.lat,
-        current.lng,
-        destination.lat,
-        destination.lng,
-        !useToll,
-        !useToll
-    );
+        const routeData =
+            await getRoute(
+                current.lat,
+                current.lng,
+                destination.lat,
+                destination.lng,
+                !useToll,
+                !useToll
+            );
 
         if(!routeData.routes || routeData.routes.length === 0){
             throw new Error("ルートが取得できませんでした");
@@ -427,7 +447,7 @@ const routeData =
             decodePolyline(
             currentRoute.polyline.encodedPolyline
         );
-        
+
         currentStepIndex = 0;
 
         drawRoute(
@@ -631,7 +651,7 @@ function startLocationTracking(){
 
                 latestLng =
                     pos.coords.longitude;
-                
+
                 latestAccuracy =
                     Math.round(
                     pos.coords.accuracy
@@ -674,6 +694,7 @@ function startLocationTracking(){
 
         },1000);
 }
+
 function calculateSpeed(lat,lng){
 
     const now = Date.now();
@@ -731,11 +752,11 @@ function shortenInstruction(text){
         .replace(/都心環状線/g,"環状")
         .replace(/中央環状線/g,"環状")
         .replace(/東北自動車道/g,"東北道")
-        
         .replace(/\s+/g," ")
         .trim()
         .substring(0,16);
 }
+
 function updateCurrentStep(lat,lng){
 
     if(routeSteps.length === 0){
@@ -761,40 +782,34 @@ function updateCurrentStep(lat,lng){
     const maneuver =
         step.navigationInstruction?.maneuver ?? "STRAIGHT";
 
+    const arrowId =
+        maneuverToArrow(maneuver);
 
-const arrowId =
-    maneuverToArrow(maneuver);
+    const nextStep =
+        routeSteps[currentStepIndex + 1];
 
-const nextStep =
-    routeSteps[currentStepIndex + 1];
+    const nextArrowId =
+        nextStep
+            ? maneuverToArrow(
+                nextStep.navigationInstruction?.maneuver ?? "STRAIGHT"
+              )
+            : 3;
 
-const nextArrowId =
-    nextStep
-        ? maneuverToArrow(
-            nextStep.navigationInstruction?.maneuver ?? "STRAIGHT"
-          )
-        : 3;
-
-const distanceText =
-    formatDistance(remain);
-
-const line1 =
-    `${arrowId}|${distanceText}|${nextArrowId}`;
+    const distanceText =
+        formatDistance(remain);
 
     let line2 =
         `${latestSpeed}km/h ACC:${latestAccuracy ?? "--"}m`;
 
     if(remain <= GUIDE_TEXT_DISTANCE_M){
 
-    const guideStep =
-        nextStep ?? step;
+        const guideStep =
+            nextStep ?? step;
 
-    const instruction =
-        guideStep.navigationInstruction?.instructions ??
-        guideStep.navigationInstruction?.instruction ??
-        "";
-        
-        
+        const instruction =
+            guideStep.navigationInstruction?.instructions ??
+            guideStep.navigationInstruction?.instruction ??
+            "";
 
         const shortInstruction =
             shortenInstruction(instruction);
@@ -804,22 +819,17 @@ const line1 =
                 shortInstruction;
         }
     }
-    
 
-    updateOledPreview(line1,line2);
+    updateOledPreview(`${arrowId}|${distanceText}|${nextArrowId}`, line2);
 
-const nextManeuver =
-    nextStep
-        ? nextStep.navigationInstruction?.maneuver ?? "UNKNOWN"
-        : "GOAL";
-    
-const sendText =
-    `${arrowId}|${distanceText}|${nextArrowId}|${nextManeuver}|${line2}`;
+    // Arduino側のパース: arrow1|distanceText|arrow2|line2 の4フィールド形式
+    const sendText =
+        `${arrowId}|${distanceText}|${nextArrowId}|${line2}`;
 
-sendToEsp32Text(sendText);
-    
+    sendToEsp32Text(sendText);
+
     const payload = {
-        line1:line1,
+        line1:`${arrowId}|${distanceText}|${nextArrowId}`,
         line2:line2,
         arrow_id:arrowId,
         next_arrow_id:nextArrowId,
@@ -857,6 +867,7 @@ sendToEsp32Text(sendText);
         }
     }
 }
+
 async function recalculateRoute(currentLat,currentLng){
 
     if(!destination){
@@ -865,18 +876,18 @@ async function recalculateRoute(currentLat,currentLng){
 
     try{
 
-       const useToll =
-    document.getElementById("useToll").checked;
+        const useToll =
+            document.getElementById("useToll").checked;
 
-    const routeData =
-        await getRoute(
-            currentLat,
-            currentLng,
-            destination.lat,
-            destination.lng,
-            !useToll,
-            !useToll
-        );
+        const routeData =
+            await getRoute(
+                currentLat,
+                currentLng,
+                destination.lat,
+                destination.lng,
+                !useToll,
+                !useToll
+            );
 
         if(!routeData.routes || routeData.routes.length === 0){
             return;
@@ -913,6 +924,7 @@ async function recalculateRoute(currentLat,currentLng){
     lastRouteDistance = null;
     lastRerouteTime = Date.now();
 }
+
 function checkRouteDeviation(lat, lng){
 
     if(!currentRoute){
@@ -926,115 +938,95 @@ function checkRouteDeviation(lat, lng){
     const points =
         routePoints;
 
-console.log(
-    "ROUTE DIST",
-    currentRoute.distanceMeters,
-    "POINTS",
-    points.length,
-    "M_PER_POINT",
-    Math.round(
-        currentRoute.distanceMeters /
-        points.length
-    )
-);
+    let minDistance =
+        Number.MAX_VALUE;
 
-    if(points.length === 0){
-        return;
-    }
-let minDistance =
-    Number.MAX_VALUE;
+    let nearestIndex = 0;
 
-let nearestIndex = 0;
+    points.forEach((point,index)=>{
 
-points.forEach((point,index)=>{
+        const d =
+            calculateDistance(
+                lat,
+                lng,
+                point[0],
+                point[1]
+            );
 
-    const d =
-        calculateDistance(
-            lat,
-            lng,
-            point[0],
-            point[1]
-        );
+        if(d < minDistance){
+            minDistance = d;
+            nearestIndex = index;
+        }
+    });
 
-    if(d < minDistance){
-        minDistance = d;
-        nearestIndex = index;
-    }
-});
-let correctedDistance =
-    minDistance;
-
-const accuracyThreshold =
-    latestAccuracy !== null
-        ? latestAccuracy
-        : 0;
-
-if(minDistance > accuracyThreshold){
-
-    let segmentDistance =
+    let correctedDistance =
         minDistance;
 
-    if(nearestIndex > 0){
+    const accuracyThreshold =
+        latestAccuracy !== null
+            ? latestAccuracy
+            : 0;
 
-        const prev =
-            points[nearestIndex - 1];
+    if(minDistance > accuracyThreshold){
 
-        const current =
-            points[nearestIndex];
+        let segmentDistance =
+            minDistance;
 
-        segmentDistance =
-            Math.min(
-                segmentDistance,
-                calculateDistanceToSegment(
-                    lat,
-                    lng,
-                    prev[0],
-                    prev[1],
-                    current[0],
-                    current[1]
-                )
-            );
+        if(nearestIndex > 0){
+
+            const prev =
+                points[nearestIndex - 1];
+
+            const current =
+                points[nearestIndex];
+
+            segmentDistance =
+                Math.min(
+                    segmentDistance,
+                    calculateDistanceToSegment(
+                        lat,
+                        lng,
+                        prev[0],
+                        prev[1],
+                        current[0],
+                        current[1]
+                    )
+                );
+        }
+
+        if(nearestIndex < points.length - 1){
+
+            const current =
+                points[nearestIndex];
+
+            const next =
+                points[nearestIndex + 1];
+
+            segmentDistance =
+                Math.min(
+                    segmentDistance,
+                    calculateDistanceToSegment(
+                        lat,
+                        lng,
+                        current[0],
+                        current[1],
+                        next[0],
+                        next[1]
+                    )
+                );
+        }
+
+        correctedDistance =
+            segmentDistance;
     }
 
-    if(nearestIndex < points.length - 1){
-
-        const current =
-            points[nearestIndex];
-
-        const next =
-            points[nearestIndex + 1];
-
-        segmentDistance =
-            Math.min(
-                segmentDistance,
-                calculateDistanceToSegment(
-                    lat,
-                    lng,
-                    current[0],
-                    current[1],
-                    next[0],
-                    next[1]
-                )
-            );
-    }
-
-    correctedDistance =
-        segmentDistance;
-}
     const now =
         Date.now();
 
     const accuracyBuffer =
-    latestAccuracy !== null
-        ? latestAccuracy + 10
-        : OFF_ROUTE_DISTANCE_M;
-
-    const isFarFromRoute =
-        correctedDistance > accuracyBuffer;
-
-    const isGettingWorse =
-        lastRouteDistance !== null &&
-        correctedDistance > lastRouteDistance + 10;
+        latestAccuracy !== null
+            ? latestAccuracy + 10
+            : OFF_ROUTE_DISTANCE_M;
 
     const isMoving =
         latestSpeed >= MIN_SPEED_FOR_REROUTE_KMH;
@@ -1043,19 +1035,19 @@ if(minDistance > accuracyThreshold){
         now - lastRerouteTime > REROUTE_COOLDOWN_MS;
 
     if(
-    correctedDistance > accuracyBuffer &&
-    isMoving
-){
-    offRouteCount++;
-}
-   
+        correctedDistance > accuracyBuffer &&
+        isMoving
+    ){
+        offRouteCount++;
+    }
     else if(
         minDistance < OFF_ROUTE_DISTANCE_M * 0.6
     ){
         offRouteCount = 0;
     }
+
     lastRouteDistance = correctedDistance;
-    
+
     document.getElementById("debugInfo").innerHTML +=
         `
     <br>ROUTE_DIST : ${Math.round(correctedDistance)}m
@@ -1063,6 +1055,7 @@ if(minDistance > accuracyThreshold){
     <br>OFF_COUNT : ${offRouteCount}
     <br>ROUTE_LIMIT : ${Math.round(accuracyBuffer)}m
     `;
+
     if(
         offRouteCount >= OFF_ROUTE_COUNT_LIMIT &&
         cooldownPassed
@@ -1077,7 +1070,8 @@ if(minDistance > accuracyThreshold){
             "SEARCHING"
         );
 
-        sendToEsp32Text(
+        // 重要メッセージのためレート制限をスキップして即時送信
+        sendToEsp32Force(
             "REROUTE,SEARCHING"
         );
 
@@ -1184,6 +1178,7 @@ function updateOledPreview(line1,line2){
             : "--"
         );
 }
+
 function buildRouteList(steps){
 
     let html = "";
@@ -1207,8 +1202,8 @@ function buildRouteList(steps){
         const shortInstruction =
             shortenInstruction(instruction);
 
-html +=
-    `
+        html +=
+            `
     <div class="route-step">
         <b>${index + 1}</b>
         ${arrow} ${formatDistance(distance)}
@@ -1224,6 +1219,7 @@ html +=
 
     return html;
 }
+
 /* =========================================================
    10. 高速利用比較
 ========================================================= */
@@ -1337,39 +1333,34 @@ function getTollText(route){
    11. 汎用関数
 ========================================================= */
 
-function maneuverToArrow(m) {
-  const map = {
-    "TURN_LEFT": 1,
-    "RAMP_LEFT": 1,
-    "TURN_RIGHT": 2,
-    "RAMP_RIGHT": 2,
-    "STRAIGHT": 3,
+function maneuverToArrow(m){
 
-    "TURN_SLIGHT_LEFT": 4,
-    "TURN_SLIGHT_RIGHT": 5,
+    const map = {
+        "TURN_LEFT":       1,
+        "RAMP_LEFT":       1,
+        "TURN_RIGHT":      2,
+        "RAMP_RIGHT":      2,
+        "STRAIGHT":        3,
+        "TURN_SLIGHT_LEFT":  4,
+        "TURN_SLIGHT_RIGHT": 5,
+        "TURN_SHARP_LEFT":   6,
+        "TURN_SHARP_RIGHT":  7,
+        "UTURN_LEFT":      8,
+        "UTURN_RIGHT":     9,
+        "ROUNDABOUT_LEFT": 10,
+        "ROUNDABOUT_RIGHT":11,
+        "MERGE":           12,
+        "FORK_LEFT":       13,
+        "FORK_RIGHT":      14,
+        "KEEP_LEFT":       15,
+        "KEEP_RIGHT":      16
+    };
 
-    "TURN_SHARP_LEFT": 6,
-    "TURN_SHARP_RIGHT": 7,
-
-    "UTURN_LEFT": 8,
-    "UTURN_RIGHT": 9,
-
-    "ROUNDABOUT_LEFT": 10,
-    "ROUNDABOUT_RIGHT": 11,
-
-    "MERGE": 12,
-
-    "FORK_LEFT": 13,
-    "FORK_RIGHT": 14,
-
-    "KEEP_LEFT": 15,
-    "KEEP_RIGHT": 16
-  };
-
-  return map[m] || 99;
+    // 未知のmaneuverは直進(3)として扱う（Arduinoは1〜16のみ処理可能）
+    return map[m] || 3;
 }
 
-    
+
 function formatDistance(meters){
 
     if(meters >= 1000){
@@ -1381,8 +1372,9 @@ function formatDistance(meters){
 
 function formatDuration(durationText){
 
+    // Routes API v2はdurationを"1234s"形式で返す
     const seconds =
-        parseInt(durationText);
+        parseFloat(durationText);
 
     const minutes =
         Math.round(seconds / 60);
@@ -1430,6 +1422,7 @@ function calculateDistance(lat1,lng1,lat2,lng2){
             Math.sqrt(1 - a)
         );
 }
+
 function calculateDistanceToSegment(lat,lng,lat1,lng1,lat2,lng2){
 
     const R = 6371000;
@@ -1499,6 +1492,7 @@ function calculateDistanceToSegment(lat,lng,lat1,lng1,lat2,lng2){
         dx * dx + dy * dy
     );
 }
+
 function decodePolyline(encoded){
 
     let points = [];
