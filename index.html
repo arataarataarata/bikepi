@@ -65,7 +65,14 @@ button{
 
 <input type="text" id="dest" placeholder="目的地を入力">
 <button onclick="searchPlace()">検索</button>
-<button onclick="goHome()">自宅に戻る</button>
+<button onclick="goHome()">自宅に戻る</button><br>
+
+<button onclick="selectRoute('toll')">高速ありで案内</button>
+<button onclick="selectRoute('noToll')">高速なしで案内</button><br>
+
+<button onclick="startNavigation()">案内開始</button>
+<button onclick="endNavigation()">案内終了</button><br>
+<button onclick="disconnectBle()">BLE接続解除</button>
 
 <br><br>
 
@@ -180,6 +187,11 @@ let displayTimer = null;
 let latestAccuracy = null;
 let routePoints = [];
 
+let tollRoute = null;
+let noTollRoute = null;
+let selectedRoute = null;
+let navigationActive = false;
+    
 /* =========================================================
    3. 初期化
 ========================================================= */
@@ -187,7 +199,28 @@ let routePoints = [];
 window.onload = function(){
     initMap();
 };
+    
+function endNavigation(){
 
+    navigationActive = false;
+
+    if(watchId){
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+
+    if(displayTimer){
+        clearInterval(displayTimer);
+        displayTimer = null;
+    }
+
+    sendToEsp32Force("NAV_END,BIKE_MODE");
+
+    updateOledPreview(
+        "NAV END",
+        "BIKE MODE"
+    );
+}
 
 /* =========================================================
    4. BLE処理
@@ -245,7 +278,20 @@ async function connectBle(){
             "BLE接続失敗";
     }
 }
+function disconnectBle(){
 
+    endNavigation();
+
+    if(bleDevice && bleDevice.gatt.connected){
+        bleDevice.gatt.disconnect();
+    }
+
+    bleConnected = false;
+    bleCharacteristic = null;
+
+    document.getElementById("bleStatus").innerHTML =
+        "BLE未接続";
+}
 function onBleDisconnected(){
     bleConnected = false;
     bleCharacteristic = null;
