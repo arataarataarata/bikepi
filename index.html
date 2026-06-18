@@ -822,15 +822,16 @@ function updateCurrentStep(lat,lng){
 
     updateOledPreview(`${arrowId}|${distanceText}|${nextArrowId}`, line2);
 
-    // Arduino側のパース: arrow1|distanceText|arrow2|line2 の4フィールド形式
+    // Arduino側のパース: arrow1|distance|arrow2|maneuver|line2 の5フィールド形式
     const sendText =
-        `${arrowId}|${distanceText}|${nextArrowId}|${line2}`;
+    `${arrowId}|${distanceText}|${nextArrowId}|${maneuver}|${line2}`;
 
     sendToEsp32Text(sendText);
 
     const payload = {
         line1:`${arrowId}|${distanceText}|${nextArrowId}`,
         line2:line2,
+        maneuver:maneuver,
         arrow_id:arrowId,
         next_arrow_id:nextArrowId,
         remain_m:remain,
@@ -1041,7 +1042,7 @@ function checkRouteDeviation(lat, lng){
         offRouteCount++;
     }
     else if(
-        minDistance < OFF_ROUTE_DISTANCE_M * 0.6
+        correctedDistance <= accuracyBuffer
     ){
         offRouteCount = 0;
     }
@@ -1356,8 +1357,8 @@ function maneuverToArrow(m){
         "KEEP_RIGHT":      16
     };
 
-    // 未知のmaneuverは直進(3)として扱う（Arduinoは1〜16のみ処理可能）
-    return map[m] || 3;
+    // // 未知のmaneuverは99として扱い、ESP32側でmaneuver文字列を表示する
+    return map[m] || 99;
 }
 
 
