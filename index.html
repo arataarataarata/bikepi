@@ -100,9 +100,9 @@ button{
 <div id="oledArrow">Straight 0m</div>
 <div id="oledSpeed">0km/h</div>
 
-    
+ /* Beeline風*/   
 <div id="oledMiniWrap">
-    <canvas id="miniMapCanvas" width="64" height="32"></canvas>
+    <canvas id="miniMapCanvas" width="640" height="320"></canvas>
 
     <div id="oledRightPreview">
         <div id="oledRightLine1">---</div>
@@ -1329,7 +1329,7 @@ function drawMiniSelf(ctx){
     ctx.arc(
         MINI_SELF_X,
         MINI_SELF_Y,
-        2,
+        8,
         0,
         Math.PI * 2
     );
