@@ -99,6 +99,14 @@ button{
 <h3>OLED表示イメージ</h3>
 <div id="oledArrow">Straight 0m</div>
 <div id="oledSpeed">0km/h</div>
+<div id="oledMiniWrap">
+    <canvas id="miniMapCanvas" width="64" height="32"></canvas>
+
+    <div id="oledRightPreview">
+        <div id="oledRightLine1">---</div>
+        <div id="oledRightLine2">---</div>
+    </div>
+</div>
 <div id="oledTime" style="font-size:14px;margin-top:8px;color:#666;">
     update: --
 </div>
@@ -707,7 +715,10 @@ function startLocationTracking(){
                         latestLat,
                         latestLng
                     );
-
+                if(pos.coords.heading !== null && !isNaN(pos.coords.heading)){
+                    latestHeadingDeg = pos.coords.heading;
+                }
+                
                 updateCurrentMarker(
                     latestLat,
                     latestLng
@@ -867,7 +878,15 @@ function updateCurrentStep(lat,lng){
     }
 
     updateOledPreview(`${arrowId}|${distanceText}|${nextArrowId}`, line2);
+    
+    drawMiniPolylineMap(lat,lng);
 
+        document.getElementById("oledRightLine1").innerHTML =
+            `${distanceText}`;
+
+        document.getElementById("oledRightLine2").innerHTML =
+            `${arrowId} → ${nextArrowId}`;
+    
     // Arduino側のパース: arrow1|distance|arrow2|maneuver|line2 の5フィールド形式
     const sendText =
     `${arrowId}|${distanceText}|${nextArrowId}|${maneuver}|${line2}`;
@@ -1201,7 +1220,256 @@ function getRemainingDistanceToStep(lat,lng,step){
 /* =========================================================
    9. 表示処理
 ========================================================= */
+/* =========================================================
+   8-A. ミニPolylineマップ 64x32 テスト表示
+========================================================= */
 
+const MINI_MAP_W = 64;
+const MINI_MAP_H = 32;
+
+// 暫定スケール：横500m、縦1000m
+const MINI_VIEW_W_M = 500;
+const MINI_VIEW_H_M = 1000;
+
+// 現在地表示位置：下中央
+const MINI_SELF_X = 32;
+const MINI_SELF_Y = 28;
+
+// 進行方向。GPSからheadingが取れない場合はルート方向で推定
+let latestHeadingDeg = null;
+
+function drawMiniPolylineMap(lat,lng){
+
+    const canvas =
+        document.getElementById("miniMapCanvas");
+
+    if(!canvas){
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.clearRect(0,0,MINI_MAP_W,MINI_MAP_H);
+
+    // 背景
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,MINI_MAP_W,MINI_MAP_H);
+
+    if(!routePoints || routePoints.length < 2){
+        drawMiniSelf(ctx);
+        return;
+    }
+
+    const heading =
+        getMiniMapHeading(lat,lng);
+
+    // ルート線
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    let started = false;
+
+    for(const point of routePoints){
+
+        const pLat = point[0];
+        const pLng = point[1];
+
+        const local =
+            latLngToLocalMeter(
+                pLat,
+                pLng,
+                lat,
+                lng
+            );
+
+        const rotated =
+            rotateLocalByHeading(
+                local.x,
+                local.y,
+                heading
+            );
+
+        const screen =
+            localMeterToMiniScreen(
+                rotated.x,
+                rotated.y
+            );
+
+        if(!started){
+            ctx.moveTo(screen.x,screen.y);
+            started = true;
+        }
+        else{
+            ctx.lineTo(screen.x,screen.y);
+        }
+    }
+
+    ctx.stroke();
+
+    // 現在地 ●
+    drawMiniSelf(ctx);
+
+    // 上方向ガイド線
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(MINI_SELF_X, MINI_SELF_Y - 4);
+    ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 10);
+    ctx.stroke();
+}
+
+function drawMiniSelf(ctx){
+
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(
+        MINI_SELF_X,
+        MINI_SELF_Y,
+        2,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+}
+
+function getMiniMapHeading(lat,lng){
+
+    // 1. GPS heading が取れる場合はそれを優先
+    if(latestHeadingDeg !== null){
+        return latestHeadingDeg;
+    }
+
+    // 2. ルート上の近い点から、次の点方向を推定
+    if(!routePoints || routePoints.length < 2){
+        return 0;
+    }
+
+    let nearestIndex = 0;
+    let minDistance = Number.MAX_VALUE;
+
+    routePoints.forEach((point,index)=>{
+
+        const d =
+            calculateDistance(
+                lat,
+                lng,
+                point[0],
+                point[1]
+            );
+
+        if(d < minDistance){
+            minDistance = d;
+            nearestIndex = index;
+        }
+    });
+
+    const nextIndex =
+        Math.min(
+            nearestIndex + 1,
+            routePoints.length - 1
+        );
+
+    const current =
+        routePoints[nearestIndex];
+
+    const next =
+        routePoints[nextIndex];
+
+    return calculateBearing(
+        current[0],
+        current[1],
+        next[0],
+        next[1]
+    );
+}
+
+function latLngToLocalMeter(lat,lng,originLat,originLng){
+
+    const meterPerLat = 111320;
+
+    const meterPerLng =
+        111320 *
+        Math.cos(originLat * Math.PI / 180);
+
+    const x =
+        (lng - originLng) * meterPerLng;
+
+    const y =
+        (lat - originLat) * meterPerLat;
+
+    return {
+        x:x,
+        y:y
+    };
+}
+
+function rotateLocalByHeading(x,y,headingDeg){
+
+    // heading方向を画面上方向に合わせる
+    const rad =
+        -headingDeg * Math.PI / 180;
+
+    const rx =
+        x * Math.cos(rad) -
+        y * Math.sin(rad);
+
+    const ry =
+        x * Math.sin(rad) +
+        y * Math.cos(rad);
+
+    return {
+        x:rx,
+        y:ry
+    };
+}
+
+function localMeterToMiniScreen(x,y){
+
+    const sx =
+        MINI_SELF_X +
+        (x / MINI_VIEW_W_M) *
+        MINI_MAP_W;
+
+    const sy =
+        MINI_SELF_Y -
+        (y / MINI_VIEW_H_M) *
+        MINI_MAP_H;
+
+    return {
+        x:sx,
+        y:sy
+    };
+}
+
+function calculateBearing(lat1,lng1,lat2,lng2){
+
+    const φ1 =
+        lat1 * Math.PI / 180;
+
+    const φ2 =
+        lat2 * Math.PI / 180;
+
+    const Δλ =
+        (lng2 - lng1) * Math.PI / 180;
+
+    const y =
+        Math.sin(Δλ) * Math.cos(φ2);
+
+    const x =
+        Math.cos(φ1) * Math.sin(φ2) -
+        Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+    const θ =
+        Math.atan2(y,x);
+
+    return (
+        θ * 180 / Math.PI +
+        360
+    ) % 360;
+}
+    
 function updateOledPreview(line1,line2){
 
     document.getElementById("oledArrow").innerHTML =
