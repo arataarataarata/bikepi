@@ -201,6 +201,9 @@ let tollRoute = null;
 let noTollRoute = null;
 let selectedRoute = null;
 let navigationActive = false;
+
+let latestHeadingDeg = null;
+let headingHistory = [];
     
 /* =========================================================
    3. 初期化
@@ -717,9 +720,11 @@ function startLocationTracking(){
                         latestLat,
                         latestLng
                     );
-                if(pos.coords.heading !== null && !isNaN(pos.coords.heading)){
-                    latestHeadingDeg = pos.coords.heading;
-                }
+                    updateHeadingFromTrack(
+                        latestLat,
+                        latestLng
+                    );
+
                 
                 updateCurrentMarker(
                     latestLat,
@@ -1338,12 +1343,12 @@ function drawMiniSelf(ctx){
 
 function getMiniMapHeading(lat,lng){
 
-    // 1. GPS heading が取れる場合はそれを優先
+    // 走行履歴から算出した進行方向を最優先
     if(latestHeadingDeg !== null){
         return latestHeadingDeg;
     }
 
-    // 2. ルート上の近い点から、次の点方向を推定
+    // まだ走行履歴がない場合だけ、ルート方向で代用
     if(!routePoints || routePoints.length < 2){
         return 0;
     }
@@ -1386,7 +1391,6 @@ function getMiniMapHeading(lat,lng){
         next[1]
     );
 }
-
 function latLngToLocalMeter(lat,lng,originLat,originLng){
 
     const meterPerLat = 111320;
@@ -1444,7 +1448,88 @@ function localMeterToMiniScreen(x,y){
         y:sy
     };
 }
+function updateHeadingFromTrack(lat,lng){
 
+    const now = Date.now();
+
+    headingHistory.push({
+        lat:lat,
+        lng:lng,
+        time:now
+    });
+
+    // 直近10点だけ保持
+    if(headingHistory.length > 10){
+        headingHistory.shift();
+    }
+
+    if(headingHistory.length < 2){
+        return;
+    }
+
+    // 近すぎる点はGPSブレなので無視
+    const latest =
+        headingHistory[headingHistory.length - 1];
+
+    let base = null;
+
+    // 直近履歴の中から、現在地から5m以上離れた点を探す
+    for(let i = headingHistory.length - 2; i >= 0; i--){
+
+        const p =
+            headingHistory[i];
+
+        const d =
+            calculateDistance(
+                p.lat,
+                p.lng,
+                latest.lat,
+                latest.lng
+            );
+
+        if(d >= 5){
+            base = p;
+            break;
+        }
+    }
+
+    if(!base){
+        return;
+    }
+
+    const newHeading =
+        calculateBearing(
+            base.lat,
+            base.lng,
+            latest.lat,
+            latest.lng
+        );
+
+    // 初回
+    if(latestHeadingDeg === null){
+        latestHeadingDeg = newHeading;
+        return;
+    }
+
+    // 急激な向き変化をなめらかにする
+    latestHeadingDeg =
+        smoothHeading(
+            latestHeadingDeg,
+            newHeading,
+            0.35
+        );
+}
+function smoothHeading(oldHeading,newHeading,alpha){
+
+    let diff =
+        ((newHeading - oldHeading + 540) % 360) - 180;
+
+    return (
+        oldHeading +
+        diff * alpha +
+        360
+    ) % 360;
+}
 function calculateBearing(lat1,lng1,lat2,lng2){
 
     const φ1 =
