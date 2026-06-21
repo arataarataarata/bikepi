@@ -102,7 +102,7 @@ button{
 
  /* Beeline風*/   
 <div id="oledMiniWrap">
-    <canvas id="miniMapCanvas" width="640" height="320"></canvas>
+    <canvas id="miniMapCanvas" width="320" height="320"></canvas>
 
     <div id="oledRightPreview">
         <div id="oledRightLine1">---</div>
@@ -1231,15 +1231,15 @@ function getRemainingDistanceToStep(lat,lng,step){
    8-A. ミニPolylineマップ 64x32 テスト表示
 ========================================================= */
 
-const MINI_MAP_W = 640;
+const MINI_MAP_W = 320;
 const MINI_MAP_H = 320;
 
 // 暫定スケール：横1000m、縦2000m
 const MINI_VIEW_W_M = 500;
-const MINI_VIEW_H_M = 1000;
+const MINI_VIEW_H_M = 500;
 
 // 現在地表示位置：下中央
-const MINI_SELF_X = 320;
+const MINI_SELF_X = 160;
 const MINI_SELF_Y = 280;
 
 // 進行方向。GPSからheadingが取れない場合はルート方向で推定
@@ -1273,8 +1273,11 @@ function drawMiniPolylineMap(lat,lng){
 
     // ルート線
     ctx.strokeStyle = "white";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 10;
     ctx.beginPath();
+    ctx.moveTo(MINI_SELF_X, MINI_SELF_Y - 20);
+    ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 80);
+    ctx.stroke();
 
     let started = false;
 
@@ -1334,7 +1337,7 @@ function drawMiniSelf(ctx){
     ctx.arc(
         MINI_SELF_X,
         MINI_SELF_Y,
-        8,
+        10,
         0,
         Math.PI * 2
     );
