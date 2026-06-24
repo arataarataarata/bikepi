@@ -62,27 +62,29 @@ button{
 <body>
 
 <h1>Bike Navi Ver3</h1>
+
 <input type="text" id="dest" placeholder="目的地を入力">
+<button onclick="searchPlace()">検索</button>
+<button onclick="goHome()">自宅に戻る</button><br>
 
-<button onclick="searchWithToll(true)">検索：高速あり</button>
-<button onclick="searchWithToll(false)">検索：高速なし</button>
-<br>
-
-<button onclick="goHomeWithToll(true)">自宅：高速あり</button>
-<button onclick="goHomeWithToll(false)">自宅：高速なし</button>
-<br>
+<button onclick="selectRoute('toll')">高速ありで案内</button>
+<button onclick="selectRoute('noToll')">高速なしで案内</button><br>
 
 <button onclick="startNavigation()">案内開始</button>
-<button onclick="endNavigation()">案内終了</button>
-<br>
+<button onclick="endNavigation()">案内終了</button><br>
+<button onclick="disconnectBle()">BLE接続解除</button>
+
+<br><br>
 
 <button onclick="connectBle()">ESP32 BLE接続</button>
-<button onclick="disconnectBle()">BLE接続解除</button>
 <span id="bleStatus">BLE未接続</span>
 
 <br><br>
 
-
+<label>
+    <input type="checkbox" id="useToll" checked>
+    有料道路を使用する
+</label>
 
 <div id="result" class="section">
 待機中
@@ -115,6 +117,10 @@ button{
 </div>
 </div>
 
+<div class="section">
+<h3>高速利用 比較</h3>
+<div id="routeCompare">未取得</div>
+</div>
 
 <div class="section">
 <h3>ルート全体</h3>
@@ -157,8 +163,6 @@ const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
 
-
-
 /* =========================================================
    2. 状態管理
 ========================================================= */
@@ -169,7 +173,6 @@ let routeSteps = [];
 let currentStepIndex = 0;
 
 let watchId = null;
-let selectedUseToll = true;
 
 let previousLat = null;
 let previousLng = null;
@@ -232,22 +235,6 @@ function endNavigation(){
     );
 }
 
-function searchWithToll(useToll){
-
-    selectedUseToll = useToll;
-
-    searchPlace();
-}
-function goHomeWithToll(useToll){
-
-    selectedUseToll = useToll;
-
-    document.getElementById("dest").value =
-        HOME_ADDRESS;
-
-    searchPlace();
-}
-    
 /* =========================================================
    4. BLE処理
 ========================================================= */
@@ -471,12 +458,7 @@ async function searchPlace(){
 
     const keyword =
         document.getElementById("dest").value;
-    const routeLabel =
-        selectedUseToll ? "高速あり" : "高速なし";
 
-    const tollPrice =
-        getTollText(currentRoute);
-    
     if(!keyword){
         alert("目的地を入力してください");
         return;
@@ -493,10 +475,13 @@ async function searchPlace(){
         };
 
         const current =
-            await Location();
+            await getCurrentLocation();
 
+        compareRoutes(current,destination);
 
-        const useToll = selectedUseToll;
+        const useToll =
+            document.getElementById("useToll").checked;
+
         const routeData =
             await getRoute(
                 current.lat,
@@ -513,11 +498,6 @@ async function searchPlace(){
 
         currentRoute =
             routeData.routes[0];
-    
-        console.log(
-            "TOLL INFO",
-            currentRoute.travelAdvisory
-        );
 
         routeSteps =
             currentRoute.legs[0].steps;
@@ -526,12 +506,7 @@ async function searchPlace(){
             decodePolyline(
             currentRoute.polyline.encodedPolyline
         );
-console.log("encodedPolyline", currentRoute.polyline?.encodedPolyline);
-console.log("routePoints length", routePoints.length);
-console.log("routePoints first", routePoints[0]);
-console.log("routePoints last", routePoints[routePoints.length - 1]);
 
-        
         currentStepIndex = 0;
 
         drawRoute(
@@ -567,10 +542,6 @@ console.log("routePoints last", routePoints[routePoints.length - 1]);
             ${durationMin} 分
             <br><br>
 
-            <b>料金</b><br>
-            ${tollPrice}
-            <br><br>
-
             <b>ステップ数</b><br>
             ${routeSteps.length}
             `;
@@ -585,7 +556,7 @@ console.log("routePoints last", routePoints[routePoints.length - 1]);
     }
     catch(error){
 
-        //console.error(error);
+        console.error(error);
 
         document.getElementById("result").innerHTML =
             "エラー<br><br>" + error;
@@ -717,7 +688,7 @@ async function getCurrentLocation(){
             }
         );
     });
-}   
+}
 
 function startLocationTracking(){
 
@@ -749,10 +720,10 @@ function startLocationTracking(){
                         latestLat,
                         latestLng
                     );
-                  //  updateHeadingFromTrack(
-                  //      latestLat,
-                  //      latestLng
-                  //  );
+                    updateHeadingFromTrack(
+                        latestLat,
+                        latestLng
+                    );
 
                 
                 updateCurrentMarker(
@@ -978,7 +949,9 @@ async function recalculateRoute(currentLat,currentLng){
 
     try{
 
-        const useToll = selectedUseToll;
+        const useToll =
+            document.getElementById("useToll").checked;
+
         const routeData =
             await getRoute(
                 currentLat,
@@ -1249,6 +1222,7 @@ function getRemainingDistanceToStep(lat,lng,step){
         )
     );
 }
+
 
 /* =========================================================
    8-A. ミニPolylineマップ 64x32 テスト表示
@@ -1583,7 +1557,6 @@ function calculateBearing(lat1,lng1,lat2,lng2){
     ) % 360;
 }
 
-
 /* =========================================================
    9. 表示処理
 ========================================================= */
@@ -1656,6 +1629,85 @@ function buildRouteList(steps){
    10. 高速利用比較
 ========================================================= */
 
+async function compareRoutes(current,destination){
+
+    try{
+
+        const tollRouteData =
+            await getRoute(
+                current.lat,
+                current.lng,
+                destination.lat,
+                destination.lng,
+                false,
+                false
+            );
+
+        const noTollRouteData =
+            await getRoute(
+                current.lat,
+                current.lng,
+                destination.lat,
+                destination.lng,
+                true,
+                true
+            );
+
+        const tollRoute =
+            tollRouteData.routes?.[0];
+
+        const noTollRoute =
+            noTollRouteData.routes?.[0];
+
+        if(!tollRoute || !noTollRoute){
+            return;
+        }
+
+        const tollDistance =
+            (tollRoute.distanceMeters / 1000).toFixed(1);
+
+        const noTollDistance =
+            (noTollRoute.distanceMeters / 1000).toFixed(1);
+
+        const tollDuration =
+            formatDuration(tollRoute.duration);
+
+        const noTollDuration =
+            formatDuration(noTollRoute.duration);
+
+        const tollPrice =
+            getTollText(tollRoute);
+
+        document.getElementById("routeCompare").innerHTML =
+            `
+            <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+                <tr>
+                    <th></th>
+                    <th>高速あり</th>
+                    <th>高速なし</th>
+                </tr>
+                <tr>
+                    <td>距離</td>
+                    <td>${tollDistance} km</td>
+                    <td>${noTollDistance} km</td>
+                </tr>
+                <tr>
+                    <td>時間</td>
+                    <td>${tollDuration}</td>
+                    <td>${noTollDuration}</td>
+                </tr>
+                <tr>
+                    <td>料金</td>
+                    <td>${tollPrice}</td>
+                    <td>0円</td>
+                </tr>
+            </table>
+            `;
+    }
+    catch(error){
+        console.error(error);
+    }
+}
 
 function getTollText(route){
 
