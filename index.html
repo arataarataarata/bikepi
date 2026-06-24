@@ -696,11 +696,7 @@ function goHome(){
 ========================================================= */
 
 async function getCurrentLocation(){
-   
-   // return new Promise((resolve,reject)=>{
-        // 既存GPS処理
-   // });
-    
+
     return new Promise((resolve,reject)=>{
 
         navigator.geolocation.getCurrentPosition(
@@ -721,7 +717,7 @@ async function getCurrentLocation(){
             }
         );
     });
-}
+}   
 
 function startLocationTracking(){
 
