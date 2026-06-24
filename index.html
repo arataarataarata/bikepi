@@ -1269,8 +1269,8 @@ const MINI_MAP_W = 320;
 const MINI_MAP_H = 320;
 
 // 暫定スケール：横1000m、縦2000m
-const MINI_VIEW_W_M = 2000;
-const MINI_VIEW_H_M = 2000;
+const MINI_VIEW_W_M = 500;
+const MINI_VIEW_H_M = 500;
 
 // 現在地表示位置：下中央
 const MINI_SELF_X = 160;
@@ -1278,7 +1278,7 @@ const MINI_SELF_Y = 280;
 
 // 進行方向。GPSからheadingが取れない場合はルート方向で推定
 let latestHeadingDeg = null;
-const heading = latestHeadingDeg !== null ? latestHeadingDeg : 0;
+//const heading = latestHeadingDeg !== null ? latestHeadingDeg : 0;
 
 
 function drawMiniPolylineMap(lat,lng){
