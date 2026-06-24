@@ -478,10 +478,6 @@ async function searchPlace(){
     const routeLabel =
         selectedUseToll ? "高速あり" : "高速なし";
 
-    console.log(
-        "TOLL INFO",
-        currentRoute.travelAdvisory
-    );
     const tollPrice =
         getTollText(currentRoute);
     
@@ -521,6 +517,11 @@ async function searchPlace(){
 
         currentRoute =
             routeData.routes[0];
+    
+        console.log(
+            "TOLL INFO",
+            currentRoute.travelAdvisory
+        );
 
         routeSteps =
             currentRoute.legs[0].steps;
