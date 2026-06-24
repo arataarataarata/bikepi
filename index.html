@@ -530,7 +530,12 @@ async function searchPlace(){
             decodePolyline(
             currentRoute.polyline.encodedPolyline
         );
+console.log("encodedPolyline", currentRoute.polyline?.encodedPolyline);
+console.log("routePoints length", routePoints.length);
+console.log("routePoints first", routePoints[0]);
+console.log("routePoints last", routePoints[routePoints.length - 1]);
 
+        
         currentStepIndex = 0;
 
         drawRoute(
