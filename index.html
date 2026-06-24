@@ -157,11 +157,7 @@ const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
 
-const TEST_MODE = TRUE;
-const TEST_CURRENT_LOCATION = {
-    lat:35.6640,
-    lng:139.8590
-};
+
 
 /* =========================================================
    2. 状態管理
@@ -497,7 +493,7 @@ async function searchPlace(){
         };
 
         const current =
-            await getCurrentLocation();
+            await Location();
 
 
         const useToll = selectedUseToll;
@@ -700,14 +696,7 @@ function goHome(){
 ========================================================= */
 
 async function getCurrentLocation(){
-    if(TEST_MODE){
-        latestLat = TEST_CURRENT_LOCATION.lat;
-        latestLng = TEST_CURRENT_LOCATION.lng;
-        latestAccuracy = 10;
-
-        return TEST_CURRENT_LOCATION;
-    }
-
+   
    // return new Promise((resolve,reject)=>{
         // 既存GPS処理
    // });
