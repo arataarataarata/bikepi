@@ -63,28 +63,17 @@ button{
 
 <h1>Bike Navi Ver3</h1>
 
-<input type="text" id="dest" placeholder="目的地を入力">
 <button onclick="searchPlace()">検索</button>
-<button onclick="goHome()">自宅に戻る</button><br>
+<button onclick="goHome()">自宅に戻る</button>
 
 <button onclick="selectRoute('toll')">高速ありで案内</button>
-<button onclick="selectRoute('noToll')">高速なしで案内</button><br>
+<button onclick="selectRoute('noToll')">高速なしで案内</button>
 
-<button onclick="startNavigation()">案内開始</button>
-<button onclick="endNavigation()">案内終了</button><br>
-<button onclick="disconnectBle()">BLE接続解除</button>
+
 
 <br><br>
 
-<button onclick="connectBle()">ESP32 BLE接続</button>
-<span id="bleStatus">BLE未接続</span>
 
-<br><br>
-
-<label>
-    <input type="checkbox" id="useToll" checked>
-    有料道路を使用する
-</label>
 
 <div id="result" class="section">
 待機中
@@ -117,10 +106,6 @@ button{
 </div>
 </div>
 
-<div class="section">
-<h3>高速利用 比較</h3>
-<div id="routeCompare">未取得</div>
-</div>
 
 <div class="section">
 <h3>ルート全体</h3>
@@ -173,6 +158,7 @@ let routeSteps = [];
 let currentStepIndex = 0;
 
 let watchId = null;
+let selectedUseToll = true;
 
 let previousLat = null;
 let previousLng = null;
@@ -235,6 +221,22 @@ function endNavigation(){
     );
 }
 
+function searchWithToll(useToll){
+
+    selectedUseToll = useToll;
+
+    searchPlace();
+}
+function goHomeWithToll(useToll){
+
+    selectedUseToll = useToll;
+
+    document.getElementById("dest").value =
+        HOME_ADDRESS;
+
+    searchPlace();
+}
+    
 /* =========================================================
    4. BLE処理
 ========================================================= */
@@ -458,7 +460,12 @@ async function searchPlace(){
 
     const keyword =
         document.getElementById("dest").value;
+    const routeLabel =
+        selectedUseToll ? "高速あり" : "高速なし";
 
+    const tollPrice =
+        getTollText(currentRoute);
+    
     if(!keyword){
         alert("目的地を入力してください");
         return;
@@ -477,11 +484,8 @@ async function searchPlace(){
         const current =
             await getCurrentLocation();
 
-        compareRoutes(current,destination);
 
-        const useToll =
-            document.getElementById("useToll").checked;
-
+        const useToll = selectedUseToll;
         const routeData =
             await getRoute(
                 current.lat,
@@ -540,6 +544,10 @@ async function searchPlace(){
 
             <b>所要時間</b><br>
             ${durationMin} 分
+            <br><br>
+
+            <b>料金</b><br>
+            ${tollPrice}
             <br><br>
 
             <b>ステップ数</b><br>
@@ -949,9 +957,7 @@ async function recalculateRoute(currentLat,currentLng){
 
     try{
 
-        const useToll =
-            document.getElementById("useToll").checked;
-
+        const useToll = selectedUseToll;
         const routeData =
             await getRoute(
                 currentLat,
@@ -1629,85 +1635,6 @@ function buildRouteList(steps){
    10. 高速利用比較
 ========================================================= */
 
-async function compareRoutes(current,destination){
-
-    try{
-
-        const tollRouteData =
-            await getRoute(
-                current.lat,
-                current.lng,
-                destination.lat,
-                destination.lng,
-                false,
-                false
-            );
-
-        const noTollRouteData =
-            await getRoute(
-                current.lat,
-                current.lng,
-                destination.lat,
-                destination.lng,
-                true,
-                true
-            );
-
-        const tollRoute =
-            tollRouteData.routes?.[0];
-
-        const noTollRoute =
-            noTollRouteData.routes?.[0];
-
-        if(!tollRoute || !noTollRoute){
-            return;
-        }
-
-        const tollDistance =
-            (tollRoute.distanceMeters / 1000).toFixed(1);
-
-        const noTollDistance =
-            (noTollRoute.distanceMeters / 1000).toFixed(1);
-
-        const tollDuration =
-            formatDuration(tollRoute.duration);
-
-        const noTollDuration =
-            formatDuration(noTollRoute.duration);
-
-        const tollPrice =
-            getTollText(tollRoute);
-
-        document.getElementById("routeCompare").innerHTML =
-            `
-            <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
-                <tr>
-                    <th></th>
-                    <th>高速あり</th>
-                    <th>高速なし</th>
-                </tr>
-                <tr>
-                    <td>距離</td>
-                    <td>${tollDistance} km</td>
-                    <td>${noTollDistance} km</td>
-                </tr>
-                <tr>
-                    <td>時間</td>
-                    <td>${tollDuration}</td>
-                    <td>${noTollDuration}</td>
-                </tr>
-                <tr>
-                    <td>料金</td>
-                    <td>${tollPrice}</td>
-                    <td>0円</td>
-                </tr>
-            </table>
-            `;
-    }
-    catch(error){
-        console.error(error);
-    }
-}
 
 function getTollText(route){
 
