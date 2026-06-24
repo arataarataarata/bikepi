@@ -85,10 +85,7 @@ button{
 
 <br><br>
 
-<label>
-    <input type="checkbox" id="useToll" checked>
-    有料道路を使用する
-</label>
+
 
 <div id="result" class="section">
 待機中
@@ -167,6 +164,7 @@ const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
 
+    
 /* =========================================================
    2. 状態管理
 ========================================================= */
@@ -206,9 +204,11 @@ let noTollRoute = null;
 let selectedRoute = null;
 let navigationActive = false;
 
-
 let headingHistory = [];
-    
+
+let selectedUseToll = true;
+let selectedRouteName = "目的地";
+
 /* =========================================================
    3. 初期化
 ========================================================= */
@@ -457,7 +457,26 @@ function updateCurrentMarker(lat,lng){
 /* =========================================================
    6. 目的地検索・ルート取得
 ========================================================= */
+function searchWithToll(useToll){
 
+    selectedUseToll = useToll;
+    selectedRouteName = "目的地";
+
+    searchPlace();
+}
+
+function goHomeWithToll(useToll){
+
+    selectedUseToll = useToll;
+    selectedRouteName = "自宅";
+
+    document.getElementById("dest").value =
+        HOME_ADDRESS;
+
+    searchPlace();
+}
+
+    
 async function searchPlace(){
 
     const keyword =
@@ -484,7 +503,7 @@ async function searchPlace(){
         compareRoutes(current,destination);
 
         const useToll =
-            document.getElementById("useToll").checked;
+            selectedUseToll;
 
         const routeData =
             await getRoute(
