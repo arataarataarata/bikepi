@@ -163,8 +163,7 @@ const OFF_ROUTE_COUNT_LIMIT = 3;
 const REROUTE_COOLDOWN_MS = 15000;
 const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
-const routeLabel =
-    selectedUseToll ? "高速あり" : "高速なし";
+
     
 /* =========================================================
    2. 状態管理
@@ -570,11 +569,7 @@ async function searchPlace(){
             <b>所要時間</b><br>
             ${durationMin} 分
             <br><br>
-
-            <b>選択ルート</b><br>
-            ${selectedRouteName}（${routeLabel}）
-            <br><br>
-            
+       
             <b>ステップ数</b><br>
             ${routeSteps.length}
             `;
