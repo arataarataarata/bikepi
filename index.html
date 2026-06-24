@@ -759,10 +759,10 @@ function startLocationTracking(){
                         latestLat,
                         latestLng
                     );
-                    updateHeadingFromTrack(
-                        latestLat,
-                        latestLng
-                    );
+                  //  updateHeadingFromTrack(
+                  //      latestLat,
+                  //      latestLng
+                  //  );
 
                 
                 updateCurrentMarker(
@@ -1380,15 +1380,10 @@ function drawMiniSelf(ctx){
     );
     ctx.fill();
 }
-
 function getMiniMapHeading(lat,lng){
 
-    // 走行履歴から算出した進行方向を最優先
-    if(latestHeadingDeg !== null){
-        return latestHeadingDeg;
-    }
-
-    // まだ走行履歴がない場合だけ、ルート方向で代用
+    // まずはルート方向だけで固定
+    // latestHeadingDeg は使わない
     if(!routePoints || routePoints.length < 2){
         return 0;
     }
@@ -1431,6 +1426,7 @@ function getMiniMapHeading(lat,lng){
         next[1]
     );
 }
+
 function latLngToLocalMeter(lat,lng,originLat,originLng){
 
     const meterPerLat = 111320;
