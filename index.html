@@ -209,6 +209,28 @@ let headingHistory = [];
 let selectedUseToll = true;
 let selectedRouteName = "目的地";
 
+    
+/* =========================================================
+   いったんここに置く
+========================================================= */
+function searchWithToll(useToll){
+
+    selectedUseToll = useToll;
+    selectedRouteName = "目的地";
+
+    searchPlace();
+}
+
+function goHomeWithToll(useToll){
+
+    selectedUseToll = useToll;
+    selectedRouteName = "自宅";
+
+    document.getElementById("dest").value =
+        HOME_ADDRESS;
+
+    searchPlace();
+}
 /* =========================================================
    3. 初期化
 ========================================================= */
@@ -457,24 +479,7 @@ function updateCurrentMarker(lat,lng){
 /* =========================================================
    6. 目的地検索・ルート取得
 ========================================================= */
-function searchWithToll(useToll){
 
-    selectedUseToll = useToll;
-    selectedRouteName = "目的地";
-
-    searchPlace();
-}
-
-function goHomeWithToll(useToll){
-
-    selectedUseToll = useToll;
-    selectedRouteName = "自宅";
-
-    document.getElementById("dest").value =
-        HOME_ADDRESS;
-
-    searchPlace();
-}
 
     
 async function searchPlace(){
