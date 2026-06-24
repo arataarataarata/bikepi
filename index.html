@@ -1262,7 +1262,7 @@ function getRemainingDistanceToStep(lat,lng,step){
 
 
 /* =========================================================
-   8-A. ミニPolylineマップ 64x32 テスト表示
+   8-A. ミニPolylineマップ 32x32 テスト表示
 ========================================================= */
 
 const MINI_MAP_W = 320;
@@ -1306,9 +1306,9 @@ function drawMiniPolylineMap(lat,lng){
         getMiniMapHeading(lat,lng);
 
     // ルート線
-   // ctx.strokeStyle = "white";
-   ctx.lineWidth = 10;
-   // ctx.beginPath();
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
    // ctx.moveTo(MINI_SELF_X, MINI_SELF_Y - 20);
    // ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 80);
    // ctx.stroke();
