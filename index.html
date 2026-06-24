@@ -1260,9 +1260,8 @@ function getRemainingDistanceToStep(lat,lng,step){
     );
 }
 
-
 /* =========================================================
-   8-A. ミニPolylineマップ 32x32 テスト表示
+   8-A. ミニPolylineマップ 64x32 テスト表示
 ========================================================= */
 
 const MINI_MAP_W = 320;
@@ -1278,8 +1277,6 @@ const MINI_SELF_Y = 280;
 
 // 進行方向。GPSからheadingが取れない場合はルート方向で推定
 let latestHeadingDeg = null;
-//const heading = latestHeadingDeg !== null ? latestHeadingDeg : 0;
-
 
 function drawMiniPolylineMap(lat,lng){
 
@@ -1308,17 +1305,16 @@ function drawMiniPolylineMap(lat,lng){
         getMiniMapHeading(lat,lng);
 
     // ルート線
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 10;
-    ctx.beginPath();
+   // ctx.strokeStyle = "white";
+   ctx.lineWidth = 10;
+   // ctx.beginPath();
    // ctx.moveTo(MINI_SELF_X, MINI_SELF_Y - 20);
    // ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 80);
    // ctx.stroke();
 
     let started = false;
 
-   for(const point of routePoints){
-   // for(const point of displayPoints){
+    for(const point of routePoints){
 
         const pLat = point[0];
         const pLng = point[1];
@@ -1380,10 +1376,15 @@ function drawMiniSelf(ctx){
     );
     ctx.fill();
 }
+
 function getMiniMapHeading(lat,lng){
 
-    // まずはルート方向だけで固定
-    // latestHeadingDeg は使わない
+    // 走行履歴から算出した進行方向を最優先
+    if(latestHeadingDeg !== null){
+        return latestHeadingDeg;
+    }
+
+    // まだ走行履歴がない場合だけ、ルート方向で代用
     if(!routePoints || routePoints.length < 2){
         return 0;
     }
@@ -1426,7 +1427,6 @@ function getMiniMapHeading(lat,lng){
         next[1]
     );
 }
-
 function latLngToLocalMeter(lat,lng,originLat,originLng){
 
     const meterPerLat = 111320;
@@ -1592,6 +1592,7 @@ function calculateBearing(lat1,lng1,lat2,lng2){
         360
     ) % 360;
 }
+
 
 /* =========================================================
    9. 表示処理
