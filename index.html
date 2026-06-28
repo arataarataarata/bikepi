@@ -101,7 +101,7 @@ button{
 <div id="oledArrow">Straight 0m</div>
 <div id="oledSpeed">0km/h</div>
 
- /* Beeline風*/   
+ <!-- Beeline風 -->  
 <div id="oledMiniWrap">
     <canvas id="miniMapCanvas" width="320" height="320"></canvas>
 
@@ -158,12 +158,13 @@ const STEP_CHANGE_DISTANCE_M = 15;
 
 const SEND_INTERVAL_MS = 1000;
 
-const OFF_ROUTE_DISTANCE_M = 60;
-const OFF_ROUTE_COUNT_LIMIT = 3;
-const REROUTE_COOLDOWN_MS = 15000;
-const MIN_SPEED_FOR_REROUTE_KMH = 5;
 const GUIDE_TEXT_DISTANCE_M = 150;
 
+const OFF_ROUTE_DISTANCE_M = 30;
+const OFF_ROUTE_COUNT_LIMIT = 2;
+const REROUTE_COOLDOWN_MS = 5000;
+const MIN_SPEED_FOR_REROUTE_KMH = 3;
+    
     
 /* =========================================================
    2. 状態管理
@@ -978,8 +979,8 @@ async function recalculateRoute(currentLat,currentLng){
     try{
 
         const useToll =
-            document.getElementById("useToll").checked;
-
+            selectedUseToll;
+        
         const routeData =
             await getRoute(
                 currentLat,
@@ -1123,12 +1124,12 @@ function checkRouteDeviation(lat, lng){
 
     const now =
         Date.now();
-
+    
     const accuracyBuffer =
-        latestAccuracy !== null
-            ? latestAccuracy + 10
-            : OFF_ROUTE_DISTANCE_M;
-
+    latestAccuracy !== null
+        ? Math.max(latestAccuracy, 5)
+        : OFF_ROUTE_DISTANCE_M;
+    
     const isMoving =
         latestSpeed >= MIN_SPEED_FOR_REROUTE_KMH;
 
@@ -1243,12 +1244,7 @@ function getRemainingDistanceToStep(lat,lng,step){
             endPoint[1]
         );
 
-    return Math.round(
-        Math.min(
-            routeRemain,
-            directRemain
-        )
-    );
+  return Math.round(routeRemain);
 }
 
 
@@ -1297,9 +1293,9 @@ function drawMiniPolylineMap(lat,lng){
         getMiniMapHeading(lat,lng);
 
     // ルート線
-   // ctx.strokeStyle = "white";
+   ctx.strokeStyle = "white";
    ctx.lineWidth = 10;
-   // ctx.beginPath();
+   ctx.beginPath();
    // ctx.moveTo(MINI_SELF_X, MINI_SELF_Y - 20);
    // ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 80);
    // ctx.stroke();
