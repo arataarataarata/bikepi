@@ -164,7 +164,20 @@ const OFF_ROUTE_DISTANCE_M = 30;
 const OFF_ROUTE_COUNT_LIMIT = 2;
 const REROUTE_COOLDOWN_MS = 5000;
 const MIN_SPEED_FOR_REROUTE_KMH = 3;
-    
+
+const MAP_OLED_W = 32;
+const MAP_OLED_H = 32;
+const MAP_SELF_X = 16;
+const MAP_SELF_Y = 28;
+
+// 32x32なので広すぎると潰れる。まずはこのくらい
+const MAP_VIEW_W_M = 500;
+const MAP_VIEW_H_M = 500;
+
+// BLE送信頻度制御
+const MAP_SEND_INTERVAL_MS = 3000;
+let lastMapSendTime = 0;
+
     
 /* =========================================================
    2. 状態管理
@@ -916,6 +929,7 @@ function updateCurrentStep(lat,lng){
     updateOledPreview(`${arrowId}|${distanceText}|${nextArrowId}`, line2);
     
     drawMiniPolylineMap(lat,lng);
+    sendMiniMapToEsp32(lat,lng);
 
         document.getElementById("oledRightLine1").innerHTML =
             `${distanceText}`;
@@ -1249,7 +1263,7 @@ function getRemainingDistanceToStep(lat,lng,step){
 
 
 /* =========================================================
-   8-A. ミニPolylineマップ 64x32 テスト表示
+   8-A. ミニPolylineマップ テスト表示
 ========================================================= */
 
 const MINI_MAP_W = 320;
@@ -1581,6 +1595,89 @@ function calculateBearing(lat1,lng1,lat2,lng2){
     ) % 360;
 }
 
+function buildMiniMapPayload32(lat,lng){
+
+    if(!routePoints || routePoints.length < 2){
+        return "MAP|";
+    }
+
+    const heading =
+        getMiniMapHeading(lat,lng);
+
+    const points = [];
+
+    for(const point of routePoints){
+
+        const pLat = point[0];
+        const pLng = point[1];
+
+        const local =
+            latLngToLocalMeter(
+                pLat,
+                pLng,
+                lat,
+                lng
+            );
+
+        const rotated =
+            rotateLocalByHeading(
+                local.x,
+                local.y,
+                heading
+            );
+
+        const x =
+            Math.round(
+                MAP_SELF_X +
+                (rotated.x / MAP_VIEW_W_M) * MAP_OLED_W
+            );
+
+        const y =
+            Math.round(
+                MAP_SELF_Y -
+                (rotated.y / MAP_VIEW_H_M) * MAP_OLED_H
+            );
+
+        // 32x32範囲外は送らない
+        if(
+            x < 0 || x > 31 ||
+            y < 0 || y > 31
+        ){
+            continue;
+        }
+
+        points.push(`${x},${y}`);
+    }
+
+    // BLE文字数削減：連続重複点を削除
+    const uniquePoints = [];
+
+    for(const p of points){
+        if(uniquePoints[uniquePoints.length - 1] !== p){
+            uniquePoints.push(p);
+        }
+    }
+
+    return "MAP|" + uniquePoints.join(";");
+    console.log("MAP PAYLOAD", "MAP|" + uniquePoints.join(";"));
+}
+
+function sendMiniMapToEsp32(lat,lng){
+
+    const now = Date.now();
+
+    if(now - lastMapSendTime < MAP_SEND_INTERVAL_MS){
+        return;
+    }
+
+    lastMapSendTime = now;
+
+    const payload =
+        buildMiniMapPayload32(lat,lng);
+
+    sendToEsp32Text(payload);
+}
+    
 /* =========================================================
    9. 表示処理
 ========================================================= */
