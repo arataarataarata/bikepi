@@ -1147,9 +1147,9 @@ function checkRouteDeviation(lat, lng){
         Date.now();
     
     const accuracyBuffer =
-    latestAccuracy !== null
-        ? Math.max(latestAccuracy, 5)
-        : OFF_ROUTE_DISTANCE_M;
+        latestAccuracy !== null
+            ? Math.max(latestAccuracy + 10, 15)
+            : OFF_ROUTE_DISTANCE_M;
     
     const isMoving =
         latestSpeed >= MIN_SPEED_FOR_REROUTE_KMH;
