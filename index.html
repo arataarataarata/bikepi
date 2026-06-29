@@ -1380,7 +1380,34 @@ function drawMiniPolylineMap(lat,lng){
     ctx.lineTo(MINI_SELF_X, MINI_SELF_Y - 10);
     ctx.stroke();
 }
+    
+function scalePointIntoMiniMap(x, y){
 
+    const dx = x - MAP_SELF_X;
+    const dy = y - MAP_SELF_Y;
+
+    let scale = 1;
+
+    if(dx > 0){
+        scale = Math.min(scale, (31 - MAP_SELF_X) / dx);
+    }
+    else if(dx < 0){
+        scale = Math.min(scale, (0 - MAP_SELF_X) / dx);
+    }
+
+    if(dy > 0){
+        scale = Math.min(scale, (31 - MAP_SELF_Y) / dy);
+    }
+    else if(dy < 0){
+        scale = Math.min(scale, (0 - MAP_SELF_Y) / dy);
+    }
+
+    return {
+        x: Math.round(MAP_SELF_X + dx * scale),
+        y: Math.round(MAP_SELF_Y + dy * scale)
+    };
+}
+    
 function drawMiniSelf(ctx){
 
     ctx.fillStyle = "white";
@@ -1674,14 +1701,17 @@ function buildMiniMapPayload32(lat,lng){
             );
 
         // 32x32範囲外は送らない
+        let screenPoint = { x:x, y:y };
+
         if(
             x < 0 || x > 31 ||
             y < 0 || y > 31
         ){
-            continue;
+            screenPoint =
+                scalePointIntoMiniMap(x, y);
         }
 
-        points.push(`${x},${y}`);
+points.push(`${screenPoint.x},${screenPoint.y}`);
     }
 
     // BLE文字数削減：連続重複点を削除
