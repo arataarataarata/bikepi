@@ -938,9 +938,14 @@ function updateCurrentStep(lat,lng){
             `${arrowId} → ${nextArrowId}`;
     
     // Arduino側のパース: arrow1|distance|arrow2|maneuver|line2 の5フィールド形式
-    const sendText =
-    `${arrowId}|${distanceText}|${nextArrowId}|${maneuver}|${line2}`;
+    const guideMode =
+    remain <= 30
+        ? 1
+        : 0;
 
+    const sendText =
+        `${arrowId}|${distanceText}|${nextArrowId}|${maneuver}|${guideMode}|${line2}`;
+    
     sendToEsp32Text(sendText);
 
     const payload = {
