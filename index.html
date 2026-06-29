@@ -764,10 +764,10 @@ function startLocationTracking(){
                         latestLat,
                         latestLng
                     );
-                    updateHeadingFromTrack(
-                        latestLat,
-                        latestLng
-                    );
+                  //  updateHeadingFromTrack(
+                  //      latestLat,
+                  //      latestLng
+                  //  );
 
                 
                 updateCurrentMarker(
@@ -1439,15 +1439,6 @@ function getRouteForwardHeading(lat,lng){
 }
 function getMiniMapHeading(lat,lng){
 
-    // 速度が出ている時は、走行履歴から進行方向を使う
-    if(
-        latestSpeed >= MIN_SPEED_FOR_TRACK_HEADING_KMH &&
-        latestHeadingDeg !== null
-    ){
-        return latestHeadingDeg;
-    }
-
-    // 低速時は、次の曲がり角方向を上にする
     const step =
         routeSteps[currentStepIndex];
 
@@ -1470,9 +1461,10 @@ function getMiniMapHeading(lat,lng){
         }
     }
 
-    // 保険：ステップが取れない場合はルート方向
     return getRouteForwardHeading(lat,lng);
 }
+
+    
 function latLngToLocalMeter(lat,lng,originLat,originLng){
 
     const meterPerLat = 111320;
@@ -1495,9 +1487,8 @@ function latLngToLocalMeter(lat,lng,originLat,originLng){
 
 function rotateLocalByHeading(x,y,headingDeg){
 
-    // heading方向を画面上方向に合わせる
     const rad =
-        -headingDeg * Math.PI / 180;
+        headingDeg * Math.PI / 180;
 
     const rx =
         x * Math.cos(rad) -
