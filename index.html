@@ -165,10 +165,13 @@ const OFF_ROUTE_COUNT_LIMIT = 2;
 const REROUTE_COOLDOWN_MS = 5000;
 const MIN_SPEED_FOR_REROUTE_KMH = 3;
 
+
 const MAP_OLED_W = 32;
 const MAP_OLED_H = 32;
 const MAP_SELF_X = 16;
 const MAP_SELF_Y = 28;
+const MIN_SPEED_FOR_HEADING_KMH = 8;
+    
 
 // 32x32なので広すぎると潰れる。まずはこのくらい
 const MAP_VIEW_W_M = 500;
@@ -1384,14 +1387,9 @@ function drawMiniSelf(ctx){
     ctx.fill();
 }
 
-function getMiniMapHeading(lat,lng){
+//保険：ステップが取れない場合はルート方向   
+function getRouteForwardHeading(lat,lng){
 
-    // 走行履歴から算出した進行方向を最優先
-    if(latestHeadingDeg !== null){
-        return latestHeadingDeg;
-    }
-
-    // まだ走行履歴がない場合だけ、ルート方向で代用
     if(!routePoints || routePoints.length < 2){
         return 0;
     }
@@ -1416,10 +1414,7 @@ function getMiniMapHeading(lat,lng){
     });
 
     const nextIndex =
-        Math.min(
-            nearestIndex + 1,
-            routePoints.length - 1
-        );
+        Math.min(nearestIndex + 3, routePoints.length - 1);
 
     const current =
         routePoints[nearestIndex];
@@ -1433,6 +1428,42 @@ function getMiniMapHeading(lat,lng){
         next[0],
         next[1]
     );
+}
+function getMiniMapHeading(lat,lng){
+
+    // 速度が出ている時は、走行履歴から進行方向を使う
+    if(
+        latestSpeed >= MIN_SPEED_FOR_TRACK_HEADING_KMH &&
+        latestHeadingDeg !== null
+    ){
+        return latestHeadingDeg;
+    }
+
+    // 低速時は、次の曲がり角方向を上にする
+    const step =
+        routeSteps[currentStepIndex];
+
+    if(step?.polyline?.encodedPolyline){
+
+        const points =
+            decodePolyline(step.polyline.encodedPolyline);
+
+        if(points.length >= 2){
+
+            const target =
+                points[points.length - 1];
+
+            return calculateBearing(
+                lat,
+                lng,
+                target[0],
+                target[1]
+            );
+        }
+    }
+
+    // 保険：ステップが取れない場合はルート方向
+    return getRouteForwardHeading(lat,lng);
 }
 function latLngToLocalMeter(lat,lng,originLat,originLng){
 
